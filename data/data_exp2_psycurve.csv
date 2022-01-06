@@ -1,4 +1,4 @@
-Subject,Level,Distance_lin,Distance_log,Trial,Response,RT
+Subject,Target,Distance,DistanceLog,Trial,Response,RT
 S51,4,100,4.60517018598809,1,0,0.790394784999989
 S51,5,120,4.78749174278205,2,1,0.687736751000102
 S51,2,60,4.0943445622221,3,0,0.717930596000315
