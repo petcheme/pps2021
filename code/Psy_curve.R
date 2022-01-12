@@ -5,13 +5,19 @@ pacman::p_load(here, tidyverse, magrittr, quickpsy, skimr, ggrepel, patchwork)
 # Data loading and data wrangling ####
 
 ## Load data ####
-data_psy <- here("data", "data_exp2_psycurve.csv") %>%
+data_psy <- here("data", "data_exp1_psycurve.csv") %>%
   read_csv() %>%
-  mutate(RTLog = log10(RT))
+  mutate(Experiment = "exp1") %>%
+  rbind(here("data", "data_exp1_psycurve.csv") %>%
+          read_csv() %>%
+          mutate(Experiment = "exp2")) %>%
+  mutate(Experiment = factor(Experiment),
+         Subject = factor(Subject),
+         RTLog = log(RT),
+         DistanceLog = log(Distance))
 
 skim(data_psy)
-
-## Summarize responses andresponse times accross subject and distances ####
+## Summarize responses and response times accross subject and distances ####
 # ---
 # NACHO2021 - Considerar la posibilidad de utilizar GLMEM en lugar de quickpsy y después
 # modelos sobre los parámetros
@@ -37,7 +43,7 @@ fit.global <- quickpsy(data_psy.summ, Distance, n_Reach, n, B = 1000, log = TRUE
 fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, grouping = .(Subject), B = 1, log = TRUE, fun = logistic_fun) 
 
 # Cargo los datos
-reach.df <- here("data", "data_exp2_subjects.csv") %>%
+reach.df <- here("data", "data_exp1_subjects.csv") %>%
   read_csv()
 
 # Sacamos a los participantes S01 y S07
