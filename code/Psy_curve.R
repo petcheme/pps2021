@@ -8,7 +8,7 @@ pacman::p_load(here, tidyverse, magrittr, quickpsy, skimr, ggrepel, patchwork)
 data_psy <- here("data", "data_exp1_psycurve.csv") %>%
   read_csv() %>%
   mutate(Experiment = "exp1") %>%
-  rbind(here("data", "data_exp1_psycurve.csv") %>%
+  rbind(here("data", "data_exp2_psycurve.csv") %>%
           read_csv() %>%
           mutate(Experiment = "exp2")) %>%
   mutate(Experiment = factor(Experiment),
@@ -17,13 +17,13 @@ data_psy <- here("data", "data_exp1_psycurve.csv") %>%
          DistanceLog = log(Distance))
 
 skim(data_psy)
-## Summarize responses and response times accross subject and distances ####
+## Summarize responses and response times accros subject and distances ####
 # ---
 # NACHO2021 - Considerar la posibilidad de utilizar GLMEM en lugar de quickpsy y después
 # modelos sobre los parámetros
 # ---
 data_psy.summ <- data_psy %>% 
-  group_by(Subject, Target, Distance, DistanceLog) %>% 
+  group_by(Experiment, Subject, Target, Distance, DistanceLog) %>% 
   summarise(m_RT = mean(RT), 
             sd_RT = sd(RT),
             m_RTLog = mean(RTLog), 
@@ -34,65 +34,78 @@ data_psy.summ <- data_psy %>%
 
 skim(data_psy.summ)
 
-# Psychometruc curve fitting ####
+# Psychometric curve fitting ####
 
-# Ajuste de la curva psicometrica global
-fit.global <- quickpsy(data_psy.summ, Distance, n_Reach, n, B = 1000, log = TRUE, fun = logistic_fun) 
+# One psychometric curve to all the data (global fit)
+fit.global <- quickpsy(data_psy.summ, Distance, n_Reach, n, grouping = .(Experiment), B = 1000, log = TRUE, fun = logistic_fun) 
 
-# Ajuste de la curva psicometrica por sujeto
-fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, grouping = .(Subject), B = 1, log = TRUE, fun = logistic_fun) 
+# One psychometric curve fit to each subjet's data (subject fit)
+fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, grouping = .(Experiment, Subject), B = 1, log = TRUE, fun = logistic_fun) 
 
-# Cargo los datos
+# Load reaching distance data
 reach.df <- here("data", "data_exp1_subjects.csv") %>%
-  read_csv()
+  read_csv() %>% 
+  mutate(Experiment = 'exp1') %>%
+  rbind(here("data", "data_exp2_subjects.csv") %>%
+          read_csv() %>%
+          mutate(Experiment = 'exp2')) 
 
-# Sacamos a los participantes S01 y S07
-reach.df <- subset(reach.df, Subject!="S07")
-reach.df <- subset(reach.df, Subject!="S01")
-reach.df$Subject <- factor(reach.df$Subject)
 # ---
-# NACHO2021 - Esto estaría bueno recordar por qué.
+# NACHO2021 - Acá estaba lo de sacar el S01 y el S07 que deberíamos ver por qué lo hacíamos
 # ---
 
-# Normalizamos el PSE con el reach de cada sujeto
-fit.subject$thresholds <- merge(fit.subject$thresholds, reach.df, by.x="Subject")
-fit.subject$thresholds$threnormReach <- fit.subject$thresholds$thre / fit.subject$thresholds$Reach
+# Normalize the threshold (PSE) using the subject's own reaching distance
+thresholds.df <- fit.subject$thresholds %>% 
+  inner_join(reach.df, by = c("Experiment", "Subject")) %>%
+  mutate(threnormReach = thre/Reach)
+  
+# Response time fitting ####
 
-# FITEO DE LOS RESPONSE TIMES ####
-
-# Hacemos un df para fitear los RTs
-data_psy.fitting <- data_psy %>% 
-  group_by(Distance, DistanceLog) %>%
-  summarise(m_RTLog = mean(RTLog))
-
-# Variables para el ajuste
-x <- data_psy.fitting$DistanceLog
-r <- data_psy.fitting$m_RTLog
-
-# Derivada de la funcion logistica para el ajuste
-f_logisticPDF <- function(par)
+# Logistic function first derivative
+logisticPDF <- function(par, x)
 {
   mu <- par[1]
   s <- par[2]
   k <- par[3]
   a <- par[4]
   rhat <- a + k * s * exp(-(x - mu)*s) / ((1+exp(-(x - mu)*s))^2)
-  sum((r - rhat)^2)
+  # Latex code of the equation: a+\frac{k s e^{(x-\mu)*s}}{(1+e^{(x-\mu)*s})^2} 
+  return(rhat)
 }
 
-# Corro el ajuste
-fit.logRT <- optim(c(4.6, 10, .1, -.2), f_logisticPDF, method="BFGS", control=list(reltol=1e-9))
-fit.logRT$par
+# Optimize function
+optim_logisticPDF <- function(par, x, r)
+{
+  rhat <- logisticPDF(par, x)
+  # Latex code of the equation: a+\frac{k s e^{(x-\mu)*s}}{(1+e^{(x-\mu)*s})^2} 
+  return(sum((r - rhat)^2)) # square of the residual 
+}
 
-fit.logRT$fit$x.fit <- seq(min(x),max(x),.01)
-fit.logRT$fit$curve <- fit.logRT$par[4] + fit.logRT$par[3] * fit.logRT$par[2] *
-  exp(-(fit.logRT$fit$x.fit - fit.logRT$par[1])*fit.logRT$par[2]) / 
-  ((1+exp(-(fit.logRT$fit$x.fit - fit.logRT$par[1])*fit.logRT$par[2]))^2)
+# Summarizing and fitting LogRT
+fit.logRT <- data_psy %>% 
+  group_by(Experiment, Distance, DistanceLog) %>%
+  summarise(m_RTLog = mean(RTLog),
+            .groups = 'drop') %>%
+  group_by(Experiment) %>%
+  nest() %>%
+  mutate(fit = map(data, ~optim(c(4.6, 10, .1, -.2), optim_logisticPDF, method="BFGS", control=list(reltol=1e-9),
+                                x=.x$DistanceLog, r=.x$m_RTLog))) %>%
+  mutate(par = map(fit, ~ .x$par %>%
+                       as.list %>% 
+                       set_names(c("mu", "s", "k", "a"))))
+fit.logRT
 
-fit.logRT$fit <- as.data.frame(fit.logRT$fit)
+# Predicted LogRT
+predicted.LogRT <- fit.logRT %>% 
+  mutate(xfit = map(data, ~seq(min(.x$DistanceLog),max(.x$DistanceLog),.01)),
+         curve = map2(par, xfit, ~logisticPDF(c(.x$mu, .x$s, .x$k, .x$a), .y))) %>%
+  select(c(Experiment, xfit, curve)) %>% 
+  unnest(cols = c(xfit, curve))
 
-plot(data_psy.fitting$DistanceLog, data_psy.fitting$m_RTLog)
-lines(fit.logRT$fit$x.fit,fit.logRT$fit$curve,col="green")
+# Fit parameter
+fit_pars.logRT <- fit.logRT %>%
+  select(-c(fit, data)) %>%
+  unnest_wider(par)
 
 # FIGURA 1 #####
 
@@ -118,6 +131,7 @@ fig1a <- ggplot(data = fit.subject$thresholds, aes(x = thre, y = prob)) +
   stat_summary(data = fit.global$averages, aes(x = Distance, y = prob), 
                size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
   geom_line(data = fit.global$curves, aes(x = x, y = y)) +
+  facet_grid(.~Experiment) +
   coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
   ylab("No reach\nproportion") +
   theme(axis.title.x=element_blank(), 
@@ -151,14 +165,13 @@ ggsave(here("figures", "fig_1.png"), width = scale * 9, height = scale * 12, uni
 
 # Insert para la FIG1
 pos <- position_jitter(width = 0.15, seed = 1)
-fig1a_insert <- ggplot(data = fit.subject$thresholds, aes(x =1, y = threnormReach)) + 
+fig1a_insert <- ggplot(data = thresholds.df, aes(x = Experiment, y = threnormReach)) + 
   geom_point(colour="black", fill="grey", position = pos, alpha = .7, pch=21, size=1.5) + 
   #geom_(colour="black", fill="grey", alpha = .7, pch=21, size=.5) +
   stat_summary(size = 2.5, fun.data = "mean_se", geom="point", colour="black") + 
   stat_summary(size = .5, fun.data = "mean_se", geom="errorbar", width=.5) +
-  ylab("PSE/reach") + xlim(c(.7,1.3))  +
+  ylab("PSE/reach") + #xlim(c(.7,1.3))  +
   theme(axis.title.x=element_blank(), 
-        axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
         axis.text = element_text(size=9), axis.title = element_text(size=10))
 fig1a_insert
