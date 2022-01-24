@@ -1,6 +1,6 @@
 # Setup ####
 # Load packages
-pacman::p_load(here, tidyverse, magrittr, quickpsy, skimr, ggrepel, patchwork)
+pacman::p_load(here, tidyverse, magrittr, quickpsy, skimr, ggrepel, patchwork, ggpubr)
 
 # Data loading and data wrangling ####
 
@@ -23,7 +23,7 @@ skim(data_psy)
 # modelos sobre los parámetros
 # ---
 data_psy.summ <- data_psy %>% 
-  group_by(Experiment, Subject, Target, Distance, DistanceLog) %>% 
+  group_by(Experiment, Target, Distance, DistanceLog) %>% 
   summarise(m_RT = mean(RT), 
             sd_RT = sd(RT),
             m_RTLog = mean(RTLog), 
@@ -37,10 +37,12 @@ skim(data_psy.summ)
 # Psychometric curve fitting ####
 
 # One psychometric curve to all the data (global fit)
-fit.global <- quickpsy(data_psy.summ, Distance, n_Reach, n, grouping = .(Experiment), B = 1000, log = TRUE, fun = logistic_fun) 
+fit.global.2 <- quickpsy(data_psy.summ, Distance, n_Reach, n, 
+                       grouping = .(Experiment), 
+                       B = 1000, log = TRUE, fun = logistic_fun) 
 
 # One psychometric curve fit to each subjet's data (subject fit)
-fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, grouping = .(Experiment, Subject), B = 1, log = TRUE, fun = logistic_fun) 
+fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, grouping = .(Experiment, Subject), bootstrap = 'none', log = TRUE, fun = logistic_fun) 
 
 # Load reaching distance data
 reach.df <- here("data", "data_exp1_subjects.csv") %>%
@@ -112,7 +114,7 @@ fit_pars.logRT <- fit.logRT %>%
 # Hago un summary para plotear
 
 pos <- position_jitter(height = 0.05, seed = 1)
-fig1a <- ggplot(data = fit.subject$thresholds, aes(x = thre, y = prob)) + 
+fig1a <- ggplot(data = thresholds.df, aes(x = thre, y = prob)) + 
   geom_point(colour="black", fill="grey", alpha = .7, pch=21, size=2.5) + 
   geom_hline(yintercept=.5, linetype = "dashed", color="grey") + 
   geom_vline(xintercept=fit.global$thresholds$thre, linetype = "dashed", color="grey") + 
@@ -134,48 +136,30 @@ fig1a <- ggplot(data = fit.subject$thresholds, aes(x = thre, y = prob)) +
   facet_grid(.~Experiment) +
   coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
   ylab("No reach\nproportion") +
+  theme_pubr() +
   theme(axis.title.x=element_blank(), 
         axis.text = element_text(size=8), axis.title = element_text(size=10))
 fig1a
 
-fig1b <- ggplot(data_psy, aes(x = Distance, y = RTLog)) +
-  geom_vline(xintercept=exp(fit.logRT$par[1]), linetype = "dashed", color="grey") + 
+fig1b <- ggplot(data_psy.summ, aes(x = Distance, y = m_RTLog)) +
   stat_summary(size = 0.5, colour="grey", alpha = .7, fun.data = "mean_se", geom="errorbar") +
   stat_summary(size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
-  geom_line(data = fit.logRT$fit, aes(x = exp(x.fit), y = curve)) +
-  geom_text_repel(data = as.data.frame(fit.logRT$par[1]), aes(x = exp(`fit.logRT$par[1]`), y = .06, 
-                                                              label=sprintf("PSE=%.1f cm\nCI(%.1f %.1f)", 
-                                                                            exp(fit.logRT$par[1]),
-                                                                            98.4, 104.7)),
-                  size=3, nudge_y=0, nudge_x=-40, direction="y", angle=0, vjust=1, segment.size = .5, 
-                  segment.colour = "grey") +
+  geom_line(data = predicted.LogRT, aes(x = exp(xfit), y = curve)) +
+  geom_vline(data = fit_pars.logRT, aes(xintercept=exp(mu)), linetype = "dashed", color="grey") + 
+  geom_text_repel(data = fit_pars.logRT, aes(x = exp(mu), y = -.4, 
+                                             label=sprintf("PSE=%.1f", exp(mu))),
+                                             size=3, nudge_y=0, nudge_x=-40, direction="y", angle=0, vjust=1, segment.size = .5, 
+                                             segment.colour = "grey") +
   coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
+  facet_grid(.~Experiment) +
   xlab("Distance (cm)") + ylab("log(RT)\nlog(s)") +
+  theme_pubr() +
   theme(axis.text = element_text(size=9), axis.title = element_text(size=10))
 
 fig1b
 
-fig1 <- fig1a / fig1b + plot_layout(widths = c(1, .7))
+fig1 <- fig1a / fig1b + plot_layout(heights = c(1, .7))
 fig1
 
 scale <- 1
 ggsave(here("figures", "fig_1.png"), width = scale * 9, height = scale * 12, units = "cm")
-
-# FIGURA 1 INSERT ####
-
-# Insert para la FIG1
-pos <- position_jitter(width = 0.15, seed = 1)
-fig1a_insert <- ggplot(data = thresholds.df, aes(x = Experiment, y = threnormReach)) + 
-  geom_point(colour="black", fill="grey", position = pos, alpha = .7, pch=21, size=1.5) + 
-  #geom_(colour="black", fill="grey", alpha = .7, pch=21, size=.5) +
-  stat_summary(size = 2.5, fun.data = "mean_se", geom="point", colour="black") + 
-  stat_summary(size = .5, fun.data = "mean_se", geom="errorbar", width=.5) +
-  ylab("PSE/reach") + #xlim(c(.7,1.3))  +
-  theme(axis.title.x=element_blank(), 
-        axis.ticks.x=element_blank(),
-        axis.text = element_text(size=9), axis.title = element_text(size=10))
-fig1a_insert
-
-scale <- 1
-ggsave("Figs/fig_1_insert.png", width = scale * 3, height = scale * 4, units = "cm")
-
