@@ -5,66 +5,87 @@ library(tidyverse)
 
 library(ggplot2)
 
+# Note: This script is a full tidyverse version of the previous one
+
+
 # Clear workspace
 rm(list = ls())
 
 # --- Input parameters ---
 
 # files to process
-par.files <- c("data_exp1_psycurve.csv",
-               "data_exp2_psycurve.csv",
-               "data_exp1_staircases.csv",
-               "data_exp2_staircases.csv")
+par.files = c("data_exp1_psycurve.csv",
+              "data_exp2_psycurve.csv",
+              "data_exp1_staircases.csv",
+              "data_exp2_staircases.csv")
 
 # which columns define groups, depending on the dataset (see below)
 par.columns <- c("Subject", "Distance", "Condition", "Start")
 
-# process one single dataset at a time
-for (aux.filename in par.files) {
-  
-  # get full path
-  aux.fullpath <- here("data", aux.filename)
 
-  # load data
-  cat("Loading \"", aux.filename, "\"... ", sep="")
-  data <- aux.fullpath %>%
-    read_csv(show_col_types = FALSE,     # \_ silent output
-             progress = FALSE,           # /
-             lazy     = FALSE) %>%       # required in Windows to prevent locking the file
-    mutate(logRT = log10(RT))
-  cat("Processing... ")
+# --- Analysis ---
 
-  # dynamically select the group columns for each dataset
-  aux.cols <- intersect(par.columns, data %>% colnames)
+# Start by building the file index
+files_index <- 
+  tibble(filename = par.files) %>%
+  mutate(fullpath = here("data", filename)) 
   
-  # outliers for each target, subject and condition
-  data %<>%
-    group_by(across(all_of(aux.cols))) %>%
-    # IQR calculation
-    mutate(low.s.d = quantile(logRT)[2] - 1.5*IQR(logRT),
-           upp.s.d = quantile(logRT)[4] + 1.5*IQR(logRT)) %>%
-    # evaluate whether the value belongs to the IQR
-    mutate(OutlierDist = logRT < low.s.d |
-                         logRT > upp.s.d)
-  
-  # outliers for each subject and condition (across targets)
-  data %<>%
-    group_by(across(all_of(setdiff(aux.cols, "Distance")))) %>%
-    
-    mutate(low.s = quantile(logRT)[2] - 1.5*IQR(logRT),
-           upp.s = quantile(logRT)[4] + 1.5*IQR(logRT)) %>%
-    
-    mutate(OutlierSubj = logRT < low.s |
-                         logRT > upp.s)
-  
-  # remove unwanted columns
-  data %<>%
-    select(-low.s.d, -upp.s.d, -low.s, -upp.s) %>%
-    select(-logRT)
+# Bonus: extract method and number of experiment
+files_index %<>%
+ tidyr::extract(col = filename, into = c("Exp", "Method"), "data_exp(\\d)_(\\w+).csv", remove= FALSE)
 
-  # save results
-  cat("Saving... ")
-  data %>% write_csv(file = aux.fullpath) #, progress = FALSE)
-  cat("DONE!\n")
-  
-}
+# Load each file (dataset) into a nested tibble
+my_data <- files_index %>%
+  mutate( map(files_index$fullpath, ~read_csv(file = ., show_col_types = FALSE, # \_ first and second flags = silent output
+                                                        progress = FALSE,       # /  third flag prevents file locking in Windows
+                                                        lazy     = FALSE)) %>% 
+            tibble(data = .))
+
+# Obtain group columns for each dataset -maybe this can be made simpler
+my_data %<>% 
+  group_by(filename) %>%
+  # get column names from each dataset
+  mutate( data.cols = map(data, ~ .x %>% colnames)) %>%
+  # compare them with the column names defined by the user
+  mutate(group.cols = intersect(par.columns, data.cols %>% unlist) %>% 
+                        list() ) %>%
+  # remove auxiliary columns
+  select(-data.cols)
+
+# Calculate logRT for each dataset
+my_data %<>% mutate(data = map( data, ~ .x %>% 
+                                  mutate(logRT = log10(RT))
+                                  ))
+
+# Calculate Distance outliers
+my_data %<>% mutate(data = map( data, ~ .x %>% 
+                                  # group across all condition columns
+                                  group_by(across(all_of(group.cols %>% unlist))) %>%
+                                  # obtain IQ range
+                                  mutate(low.s.d = quantile(logRT)[2] - 1.5*IQR(logRT),
+                                         upp.s.d = quantile(logRT)[4] + 1.5*IQR(logRT)) %>%
+                                  mutate(OutlierDist = logRT < low.s.d |
+                                                       logRT > upp.s.d) %>%
+                                  select(-low.s.d, -upp.s.d)
+                                  ))
+
+# Calculate Subject outliers (same as before but ignoring column Distance)
+my_data %<>% mutate(data = map( data, ~ .x %>% 
+                                  # group across all condition columns except Distance
+                                  group_by(across(all_of(setdiff(group.cols %>% unlist, "Distance")))) %>%
+                                  # obtain IQ range
+                                  mutate(low.s = quantile(logRT)[2] - 1.5*IQR(logRT),
+                                         upp.s = quantile(logRT)[4] + 1.5*IQR(logRT)) %>%
+                                  mutate(OutlierSubj = logRT < low.s |
+                                                       logRT > upp.s) %>%
+                                  select(-low.s, -upp.s)
+                                  ))
+
+# Remove column logRT
+my_data %<>% mutate(data = map( data, ~ .x %>% 
+                                  select(-logRT) 
+                                  ))
+
+# Just need to save results
+my_data %$% map2(data, fullpath, write_csv)
+
