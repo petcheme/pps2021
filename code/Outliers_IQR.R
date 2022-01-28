@@ -11,6 +11,17 @@ library(ggplot2)
 # Clear workspace
 rm(list = ls())
 
+# Some user-defined functions
+lower_iqr <- function(col) {
+  return(stats::quantile(col, probs = seq(0, 1, 0.25))[2] - 1.5*IQR(col))
+}
+
+upper_iqr <- function(col) {
+  return(stats::quantile(col, probs = seq(0, 1, 0.25))[4] + 1.5*IQR(col))
+}
+
+
+
 # --- Input parameters ---
 
 # files to process
@@ -62,8 +73,8 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
                                   # group across all condition columns
                                   group_by(across(all_of(group.cols %>% unlist))) %>%
                                   # obtain IQ range
-                                  mutate(low.s.d = quantile(logRT)[2] - 1.5*IQR(logRT),
-                                         upp.s.d = quantile(logRT)[4] + 1.5*IQR(logRT)) %>%
+                                  mutate(low.s.d = lower_iqr(logRT),
+                                         upp.s.d = upper_iqr(logRT)) %>%
                                   mutate(OutlierDist = logRT < low.s.d |
                                                        logRT > upp.s.d) %>%
                                   select(-low.s.d, -upp.s.d)
@@ -74,8 +85,8 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
                                   # group across all condition columns except Distance
                                   group_by(across(all_of(setdiff(group.cols %>% unlist, "Distance")))) %>%
                                   # obtain IQ range
-                                  mutate(low.s = quantile(logRT)[2] - 1.5*IQR(logRT),
-                                         upp.s = quantile(logRT)[4] + 1.5*IQR(logRT)) %>%
+                                  mutate(low.s = lower_iqr(logRT),
+                                         upp.s = upper_iqr(logRT)) %>%
                                   mutate(OutlierSubj = logRT < low.s |
                                                        logRT > upp.s) %>%
                                   select(-low.s, -upp.s)
