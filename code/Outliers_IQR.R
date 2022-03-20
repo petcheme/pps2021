@@ -13,11 +13,11 @@ rm(list = ls())
 
 # Some user-defined functions
 lower_iqr <- function(col) {
-  return(stats::quantile(col, probs = seq(0, 1, 0.25))[2] - 1.5*IQR(col))
+  return(stats::quantile(col, probs = seq(0, 1, 0.25), na.rm = TRUE)[2] - 1.5*IQR(col, na.rm = TRUE))
 }
 
 upper_iqr <- function(col) {
-  return(stats::quantile(col, probs = seq(0, 1, 0.25))[4] + 1.5*IQR(col))
+  return(stats::quantile(col, probs = seq(0, 1, 0.25), na.rm = TRUE)[4] + 1.5*IQR(col, na.rm = TRUE))
 }
 
 
@@ -77,6 +77,8 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
                                          upp.s.d = upper_iqr(logRT)) %>%
                                   mutate(OutlierDist = logRT < low.s.d |
                                                        logRT > upp.s.d) %>%
+                                  # NA data is not considered outlier
+                                  mutate(OutlierDist = ifelse(is.na(OutlierDist), FALSE, OutlierDist)) %>%
                                   select(-low.s.d, -upp.s.d)
                                   ))
 
@@ -89,6 +91,8 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
                                          upp.s = upper_iqr(logRT)) %>%
                                   mutate(OutlierSubj = logRT < low.s |
                                                        logRT > upp.s) %>%
+                                  # NA data is not considered outlier
+                                  mutate(OutlierSubj = ifelse(is.na(OutlierSubj), FALSE, OutlierSubj)) %>%
                                   select(-low.s, -upp.s)
                                   ))
 
