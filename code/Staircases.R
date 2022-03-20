@@ -2,6 +2,9 @@
 # Load packages
 pacman::p_load(here, tidyverse, magrittr, quickpsy, skimr, ggrepel, patchwork)
 
+# Clear workspace
+rm(list = ls())
+
 # Data loading and data wrangling ####
 
 ## Load data ####
