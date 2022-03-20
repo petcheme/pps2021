@@ -1,0 +1,27 @@
+### This document describes changes made to the data files, and some issues that need to be taken care of ###
+
+2022-03-20
+----------
+
+S01
+Dual staircase, block 1: Staircases have 11 reversals (instead of 12). Maybe the cause was an execution error, since one of the two staircases has responses beyond the 11th reversal (the stop rule in the mat file was set to 12)
+
+Note: mat files are not included in the repo at the time of writing.
+
+S53
+There was one RT missing, and, due to the way the Matlab export code worked, the complete register was missing also. The export code was fixed and the register is now included in the corresponding csv file (with the RT coded as NA). This also led to update the code for detecting outliers, allowing it to handle missing data.
+
+The register is: S53, dual, 1, near, 1, 31, 130, 0, 12, NA, FALSE, FALSE
+
+S61
+Simple staircase, block 1 (near): The subject id stored in the mat file was incorrect (S62 instead of S61). The corresponding registers were corrected in the csv. Also, the export code was fixed in order to allow detection of this type of inconsistency in the data.
+
+S63
+Dual staircases, block 2: This block was carried out two times (files Results_S63_2_2001-01-03_01_46.mat and Results_S63_2_2001-01-03_01_57.mat). Presumably, there was some problem with the first instance, and this led to repeat the whole block. The second instance is now coded as block 3 in the csv. 
+
+To do: One of the two instances should be discarded and coded as **the** block 2. Perhaps should check the computer used to conduct the experiments. Also check both data before deciding which one will be discarded. Assuming that there was some problem with the first instance, the second one should be kept.
+
+S65
+Simple staircases: There are five blocks (instead of four). Same as with S63, presumably one block was interrupted and had to be repeated. Block 5 corresponds to simple-far.
+
+To do: Check data and the experimental computer for some clues.
