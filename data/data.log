@@ -50,9 +50,13 @@ In block 1 of simple staircases (far) the subject displayed reversals beyond the
 To do: Replace block 4 of the simple staircases with the block 5.
 
 S66
-Dual staircase, block 1, trial 15, the stimulus did not sound correctly (due to the faulty cable already mentioned) and the subject was required to give a random response in order to continue the procedure (the procedure program did not allow to repeat the presentation). This response resulted in a reversal but it should not be taken into account for the calculation of the PSE.
+Dual staircase, block 1, trial 15, the stimulus did not sound correctly (due to the faulty cable already mentioned) and the subject was required to give a random response in order to continue the procedure (the procedure program did not allow to repeat the presentation). This response resulted in a reversal but it should not be taken into account for the calculation of the PSE. Note: the position of the source was 150 cm.
 
 Here ends the information recovered from the experiment's log. There is something else to note:
 
 S64
 According to the experiment's log there was a S64. However the corresponding data is not present in the csv's (except for a measure of the arm's reach).
+
+---
+
+Final note: Data was corrected for S63 (dual staircase, block 3 replaced block 2), S65 (simple staircase, block 5 replaced block 4) and S66 (dual staircase, block 1, trial 15, wrongly coded as a reversal). Also S62 data was removed (moved to a new sub-folder: discarded). Remains to see what happened to S64.
