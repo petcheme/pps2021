@@ -4,7 +4,7 @@
 ----------
 
 S01
-Dual staircase, block 1: Staircases have 11 reversals (instead of 12). Maybe the cause was an execution error, since one of the two staircases has responses beyond the 11th reversal (the stop rule in the mat file was set to 12)
+Dual staircase, block 1: Staircases have 11 reversals (instead of 12). Maybe the cause was an execution error, since one of the two staircases has responses beyond the 11th reversal (the stop rule in the mat file was set to 12).
 
 Note: mat files are not included in the repo at the time of writing.
 
@@ -17,7 +17,7 @@ S61
 Simple staircase, block 1 (near): The subject id stored in the mat file was incorrect (S62 instead of S61). The corresponding registers were corrected in the csv. Also, the export code was fixed in order to allow detection of this type of inconsistency in the data.
 
 S63
-Dual staircases, block 2: This block was carried out two times (files Results_S63_2_2001-01-03_01_46.mat and Results_S63_2_2001-01-03_01_57.mat). Presumably, there was some problem with the first instance, and this led to repeat the whole block. The second instance is now coded as block 3 in the csv. 
+Dual staircases, block 2: This block was carried out two times (files Results_S63_2_2001-01-03_01_46.mat and Results_S63_2_2001-01-03_01_57.mat). Presumably, there was some problem with the first instance, and this led to repeat the whole block. The second instance is now coded as block 3 in the csv.
 
 To do: One of the two instances should be discarded and coded as **the** block 2. Perhaps should check the computer used to conduct the experiments. Also check both data before deciding which one will be discarded. Assuming that there was some problem with the first instance, the second one should be kept.
 
@@ -25,3 +25,34 @@ S65
 Simple staircases: There are five blocks (instead of four). Same as with S63, presumably one block was interrupted and had to be repeated. Block 5 corresponds to simple-far.
 
 To do: Check data and the experimental computer for some clues.
+
+
+2022-03-21
+----------
+
+What follows is information recovered from the experiment's log.
+
+S62
+This subject performed a dual staircase at the beginning of the experiment (dual-far). The subject failed to display reversals within the experimental range, and therefore it was decided to perform the psychometric curve afterwards (instead of continuing with the dual staircases, as established in the experimental design), then the simple staircases and then finalize with the remaining dual staircase (dual-near). The subject was able to show a PSE for the psychometric curve, but continued to report being able to reach to sources located beyond the farther limit of the experimental range (the experimenter also tested distances beyond the range, with the same result).
+
+This problem can be observed in the data, by plotting the source position as a function of the number of trial. For farther sources, it can be seen that the source is presented at the far end for several trials in a row. This happened because the experiment was programmed to maintain the source position within the physical limits of the setup.
+
+To do: Remove subject's data.
+
+S63
+The second block of the dual staircases was performed twice due to problems with the speaker (a faulty connection provoked noise during stimulus playback). This was noted in the previous entry (date 2022-03-20).
+
+To do: Discard the first instance of the block 2 of the dual staircases.
+
+S65
+In block 1 of simple staircases (far) the subject displayed reversals beyond the experimental range. This led to modify the presentation order for simple staircases (from far-far-near-near to far-near-near-far). The other problem with this subject was that block 4 of simple staircases had to be performed twice due to a problem with the speaker (faulty connection again).
+
+To do: Replace block 4 of the simple staircases with the block 5.
+
+S66
+Dual staircase, block 1, trial 15, the stimulus did not sound correctly (due to the faulty cable already mentioned) and the subject was required to give a random response in order to continue the procedure (the procedure program did not allowed to repeat the presentation). This response resulted in a reversal but it should not be taken into account for the calculation of the PSE.
+
+Here ends the information recovered from the experiment's log. There is something else to note:
+
+S64
+According to the experiment's log there was a S64. However the corresponding data is not present in the csv's (except for a measure of the arm's reach).
