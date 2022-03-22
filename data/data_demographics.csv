@@ -1,0 +1,53 @@
+# Hearing and Vision problems were self-reported,,,,,,,,,,
+# Codes for Education, first letter: 2=Secondary, 3=Tertiary, U=Universitary, P=Postgraduate, second letter: C=Complete, S=Student (or incomplete),,,,
+Experiment,Subject,Date,Gender,Age,Education,Years of Musical Education,Dominant Hand,Hearing Problems,Vision Problems,Recruitment
+1,S01,2018-11-26 10:37:00,F,28,UG,0,R,No,No,Direct contact
+1,S02,2018-11-26 15:15:00,M,24,US,5,R,No,Astigmatism and near-sightedness,Social media (Facebook)
+1,S03,2018-11-26 18:12:00,F,25,UG,0,R,No,Astigmatism and near-sightedness,Through common friend
+1,S04,2018-11-26 17:59:00,M,28,PG,0,R,Tinnitus (soft),No,Social media (Facebook)
+1,S05,2018-11-26 14:50:00,M,50,UG,20,R,Ten percent hearing loss (left ear),Wear corrective contact lenses (astigmatism and near-sightedness),Direct contact
+1,S06,2018-11-26 16:04:00,M,44,PG,1,R,Tinnitus (soft),Near-sightedness and presbyopia,Social media (Facebook)
+1,S07,2018-11-26 17:29:00,M,28,US,4,R,No,No,Direct contact
+1,S08,2018-11-28 11:39:00,M,26,US,0,L,No,No,Direct contact
+1,S09,2018-11-28 12:41:00,M,26,US,2,R,No,Astigmatism (low),Through common friend
+1,S10,2018-11-28 14:19:00,M,34,2S,23,R,No,No,Direct contact
+1,S11,2018-11-28 15:46:00,F,38,US,6,R,No,No,Direct contact
+1,S12,2018-11-28 16:57:00,M,25,US,2,R,"Otosclerosis (right ear), don’t believe it affects hearing",No,Direct contact
+1,S13,2018-11-28 18:33:00,F,26,PG,3,R,No,No,Through common friend
+1,S14,2018-12-04 13:44:00,F,39,PG,0,R,No,No,Through common friend
+1,S15,2018-12-03 14:42:00,F,46,UG,0,L,No,Astigmatism,Social media (Facebook)
+1,S16,2018-12-05 11:59:00,M,31,US,6,R,No,No,Direct contact
+1,S17,2018-12-05 12:44:00,M,26,2G,0,R,No,No,Direct contact
+1,S18,2018-12-05 12:10:00,M,29,US,0,L,No,Near-sightedness,Through common friend
+1,S19,2018-12-05 13:24:00,F,34,PG,0,R,No,Astigmatism and near-sightedness,Direct contact
+1,S20,2018-12-05 15:17:00,M,27,US,8,R,No,Wear corrective glasses (near-sightedness),Direct contact
+1,S21,2018-12-05 16:02:00,F,40,UG,0,R,No,Wear corrective glasses (near-sightedness and astigmatism),Social media (Facebook)
+1,S22,2018-12-05 18:33:00,M,43,3G,10,R,No,No,Social media (Instagram)
+1,S23,2018-12-07 13:10:00,M,28,US,5,R,No,No,Direct contact
+1,S24,2018-12-07 13:44:00,M,26,US,0,R,No,No,Direct contact
+1,S25,2018-12-07 16:09:00,M,25,US,3,R,No,No,Direct contact
+2,S51,2019-12-09,M,28,UG,4,R,No,No,Direct contact
+2,S52,2019-12-09,M,36,UG,20,R,No,No,Lab member
+2,S53,2019-12-09,M,28,UG,0,R,No,No,Direct contact
+2,S54,2019-12-09,M,27,US,3,R,Self-reported hearing difficulty,No,UNQ student
+2,S55,2019-12-09,M,22,US,5,R,No,No,UNQ student
+2,S56,2019-12-09,M,19,US,0,R,No,Wear corrective glasses (near-sightedness and astigmatism),Direct contact
+2,S57,2019-12-09,F,23,US,1,R,No,"Wear corrective glasses (far-sightedness, astigmatism and strabismus)",Direct contact
+2,S58,2019-12-09,M,22,US,12,R,No,No,UNQ student
+2,S59,2019-12-09,M,34,PG,15,R,No,No,Direct contact
+2,S60,2019-12-10,M,19,US,5,L,No,No,UNQ student
+2,S61,2019-12-10,M,38,UG,1,R,No,No,Direct contact
+2,S62,2019-12-11,M,39,UG,0,R,No,Wear corrective glasses,Direct contact
+2,S63,2019-12-11,F,29,UG,2,R,No,No,Direct contact
+2,S64,2019-12-11,F,35,UG,0,R,No,Wear corrective glasses,Direct contact
+2,S65,2019-12-12,M,29,PS,0,R,No,No,Direct contact
+2,S66,2019-12-12,M,44,3G,5,R,No,Wear corrective glasses,Direct contact
+2,S67,2019-12-12,M,46,UG,22,R,No,No,Direct contact
+2,S68,2019-12-12,F,39,PG,0,R,No,Wear corrective glasses (near-sightedness and astigmatism),Direct contact
+2,S69,2019-12-12,F,32,UG,10,L,No,Wear corrective glasses,Direct contact
+2,S70,2019-12-12,F,27,UG,8,R,No,No,Direct contact
+2,S71,2019-12-13,M,40,PG,30,R,No,No,Lab member
+2,S72,2019-12-13,M,32,PS,20,R,No,Color blindness,Lab member
+2,S73,2019-12-13,M,42,PS,7,R,Tinnitus (both ears),No,Direct contact
+2,S74,2019-12-13,M,34,UG,0,R,Glue ear during childhood (no sequels),No,Direct contact
+2,S75,2019-12-13,F,26,US,0,R,No,Wear corrective glasses (near-sightedness),Direct contact
