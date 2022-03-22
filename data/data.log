@@ -60,3 +60,9 @@ According to the experiment's log there was a S64. However the corresponding dat
 ---
 
 Final note: Data was corrected for S63 (dual staircase, block 3 replaced block 2), S65 (simple staircase, block 5 replaced block 4) and S66 (dual staircase, block 1, trial 15, wrongly coded as a reversal). Also S62 data was removed (moved to a new sub-folder: discarded). Remains to see what happened to S64.
+
+
+2022-03-22
+----------
+
+S64: We recovered another version of the experiment's log, in which it is stated that this session could not be carried out due to a power outage.
