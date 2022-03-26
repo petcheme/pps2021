@@ -83,4 +83,4 @@ S63: dual staircase, block 3 replaced block 2
 S64: the subject did not perform the experiment
 S65: simple staircase, block 5 replaced block 4
 
-Also, IQR was recalculated
+Also, outliers were recalculated after the changes in S63 (dual-near) and S65 (simple-far).
