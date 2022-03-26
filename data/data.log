@@ -13,8 +13,10 @@ There was one RT missing, and, due to the way the Matlab export code worked, the
 
 The register is: S53, dual, 1, near, 1, 31, 130, 0, 12, NA, FALSE, FALSE
 
+Note: the Matlab export code is not included in the repo at the time of writing.
+
 S61
-Simple staircase, block 1 (near): The subject id stored in the mat file was incorrect (S62 instead of S61). The corresponding registers were corrected in the csv. Also, the export code was fixed in order to allow detection of this type of inconsistency in the data.
+Simple staircase, block 1 (near): The subject id stored in the mat file was incorrect (S62 instead of S61). The corresponding registers were corrected in the csv. Also, the Matlab export code was fixed in order to allow detection of this type of inconsistency in the data.
 
 S63
 Dual staircases, block 2: This block was carried out two times (files Results_S63_2_2001-01-03_01_46.mat and Results_S63_2_2001-01-03_01_57.mat). Presumably, there was some problem with the first instance, and this led to repeat the whole block. The second instance is now coded as block 3 in the csv.
@@ -66,3 +68,19 @@ Final note: Data was corrected for S63 (dual staircase, block 3 replaced block 2
 ----------
 
 S64: We recovered another version of the experiment's log, in which it is stated that this session could not be carried out due to a power outage.
+
+
+2022-03-26
+----------
+
+Summary of the recent changes applied to the data and related information:
+
+S01: none
+S53: the register with the missing RT was corrected
+S61: the id was corrected
+S62: data moved to a new folder: discarded
+S63: dual staircase, block 3 replaced block 2
+S64: the subject did not perform the experiment
+S65: simple staircase, block 5 replaced block 4
+
+Also, IQR was recalculated
