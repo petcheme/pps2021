@@ -23,7 +23,7 @@ skim(data_psy)
 # modelos sobre los parámetros
 # ---
 data_psy.summ <- data_psy %>% 
-  group_by(Experiment, Target, Distance, DistanceLog) %>% 
+  group_by(Experiment, Subject, Target, Distance, DistanceLog) %>% 
   summarise(m_RT = mean(RT), 
             sd_RT = sd(RT),
             m_RTLog = mean(RTLog), 
@@ -163,3 +163,54 @@ fig1
 
 scale <- 1
 ggsave(here("figures", "fig_1.png"), width = scale * 9, height = scale * 12, units = "cm")
+
+
+#Prueba GLMM
+
+library(lme4)
+library(car)
+
+data_psy_1 <- here("data", "data_exp1_psycurve.csv") %>%
+  read_csv() %>%
+  mutate(Subject = factor(Subject),
+         RTLog = log(RT),
+         DistanceLog = log(Distance))
+
+data_psy_2 <- here("data", "data_exp2_psycurve.csv") %>%
+  read_csv() %>%
+  mutate(Subject = factor(Subject),
+         RTLog = log(RT),
+         DistanceLog = log(Distance))
+
+m1 <- glmer(Response ~ DistanceLog + (1|Subject), 
+            data = data_psy_1,
+            family = binomial)
+summary(m1)
+
+m2 <- glmer(Response ~ DistanceLog + (1|Subject), 
+            data = data_psy_2,
+            family = binomial)
+summary(m2)
+
+mfull <- glmer(Response ~ DistanceLog * Experiment + (1|Subject), 
+               data = data_psy,
+               family = binomial)
+summary(mfull)
+
+logit(response) = log(response/(1-response)) = mx + b = caca
+
+response = logistic(caca) = 1/(1+exp(-caca))
+
+response = 1/(1+exp(-(mx+b)))
+
+response = 1/(1+exp(-k(x-x0)))
+
+response = 1/(1+exp(-m(x+b/m))) = 1/(1+exp(-m(x-(-b/m))))
+
+k = m
+x0 = -b/m
+
+data_psy %>% group_by(Subject) %>%
+  filter(RTLog==min(RTLog))
+
+  
