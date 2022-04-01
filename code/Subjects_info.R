@@ -8,12 +8,15 @@ pacman::p_load(here,
 rm(list = ls())
 
 
+# Load data
 data_subjects <- read_csv(here("data", "data_demographics.csv"),
                  comment = "#",
                  lazy = FALSE) %>%
   # This subject could not complete the experiment
   filter(Subject != "S64")
 
+
+# Obtain summary statistics
 stats_subjects <- data_subjects %>%
   group_by(Experiment) %>%
   summarise(n = n(),
