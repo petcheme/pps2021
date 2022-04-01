@@ -34,15 +34,38 @@ data_psy.summ <- data_psy %>%
 
 skim(data_psy.summ)
 
+# Outliers ####
+
 # Psychometric curve fitting ####
 
 # One psychometric curve to all the data (global fit)
-fit.global.2 <- quickpsy(data_psy.summ, Distance, n_Reach, n, 
+fit.global <- quickpsy(data_psy.summ, Distance, n_Reach, n, 
                        grouping = .(Experiment), 
                        B = 1000, log = TRUE, fun = logistic_fun) 
 
+# Use this one to regenerate the 
 # One psychometric curve fit to each subjet's data (subject fit)
-fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, grouping = .(Experiment, Subject), bootstrap = 'none', log = TRUE, fun = logistic_fun) 
+# fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, 
+#                         grouping = .(Experiment, Subject), 
+#                         B = 1000, log = TRUE, fun = logistic_fun) 
+
+fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, 
+                        grouping = .(Experiment, Subject), 
+                        bootstrap = FALSE, log = TRUE, fun = logistic_fun) 
+
+# Now I save the individual PSEs
+indivPSEs <- fit.subject$thresholds %>%
+  select(-prob) %>% 
+  mutate(Experiment = as.numeric(str_sub("exp1",-1)),
+         n = 1,
+         Condition = "psy_curve") %>%
+  rename(Exp = Experiment, 
+         PSE = thre,
+         PSE_ci_sup = thresup,
+         PSE_ci_inf = threinf) %>%
+  relocate(Condition, .after = Subject)
+  
+indivPSEs %>% write_csv(here("./data/data_PSE_psy_curve.csv"))
 
 # Load reaching distance data
 reach.df <- here("data", "data_exp1_subjects.csv") %>%
@@ -113,6 +136,11 @@ fit_pars.logRT <- fit.logRT %>%
 
 # Hago un summary para plotear
 
+experiment_names <- c(
+  `exp1` = "Experiment 1",
+  `exp2` = "Experiment 2"
+)
+
 pos <- position_jitter(height = 0.05, seed = 1)
 fig1a <- ggplot(data = thresholds.df, aes(x = thre, y = prob)) + 
   geom_point(colour="black", fill="grey", alpha = .7, pch=21, size=2.5) + 
@@ -133,12 +161,14 @@ fig1a <- ggplot(data = thresholds.df, aes(x = thre, y = prob)) +
   stat_summary(data = fit.global$averages, aes(x = Distance, y = prob), 
                size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
   geom_line(data = fit.global$curves, aes(x = x, y = y)) +
-  facet_grid(.~Experiment) +
+  facet_grid(.~Experiment, labeller = as_labeller(experiment_names)) +
   coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
   ylab("No reach\nproportion") +
   theme_pubr() +
   theme(axis.title.x=element_blank(), 
-        axis.text = element_text(size=8), axis.title = element_text(size=10))
+        axis.text = element_text(size=8), axis.title = element_text(size=10),
+        strip.background = element_blank(),
+        strip.text = element_text(size=12))
 fig1a
 
 fig1b <- ggplot(data_psy.summ, aes(x = Distance, y = m_RTLog)) +
@@ -154,63 +184,54 @@ fig1b <- ggplot(data_psy.summ, aes(x = Distance, y = m_RTLog)) +
   facet_grid(.~Experiment) +
   xlab("Distance (cm)") + ylab("log(RT)\nlog(s)") +
   theme_pubr() +
-  theme(axis.text = element_text(size=9), axis.title = element_text(size=10))
+  theme(axis.text = element_text(size=9), 
+        axis.title = element_text(size=10),
+        strip.background = element_blank(),
+        strip.text = element_blank())
 
 fig1b
 
 fig1 <- fig1a / fig1b + plot_layout(heights = c(1, .7))
 fig1
 
-scale <- 1
-ggsave(here("figures", "fig_1.png"), width = scale * 9, height = scale * 12, units = "cm")
+scale <- 1.5
+ggsave(here("figures", "fig_1.png"), width = scale * 18, height = scale * 12, units = "cm")
 
-
-#Prueba GLMM
-
-library(lme4)
-library(car)
-
-data_psy_1 <- here("data", "data_exp1_psycurve.csv") %>%
-  read_csv() %>%
-  mutate(Subject = factor(Subject),
-         RTLog = log(RT),
-         DistanceLog = log(Distance))
-
-data_psy_2 <- here("data", "data_exp2_psycurve.csv") %>%
-  read_csv() %>%
-  mutate(Subject = factor(Subject),
-         RTLog = log(RT),
-         DistanceLog = log(Distance))
-
-m1 <- glmer(Response ~ DistanceLog + (1|Subject), 
-            data = data_psy_1,
-            family = binomial)
-summary(m1)
-
-m2 <- glmer(Response ~ DistanceLog + (1|Subject), 
-            data = data_psy_2,
-            family = binomial)
-summary(m2)
-
-mfull <- glmer(Response ~ DistanceLog * Experiment + (1|Subject), 
-               data = data_psy,
-               family = binomial)
-summary(mfull)
-
-logit(response) = log(response/(1-response)) = mx + b = caca
-
-response = logistic(caca) = 1/(1+exp(-caca))
-
-response = 1/(1+exp(-(mx+b)))
-
-response = 1/(1+exp(-k(x-x0)))
-
-response = 1/(1+exp(-m(x+b/m))) = 1/(1+exp(-m(x-(-b/m))))
-
-k = m
-x0 = -b/m
-
-data_psy %>% group_by(Subject) %>%
-  filter(RTLog==min(RTLog))
-
-  
+# Prueba GLMM ####
+# pacman::p_load(lme4, car)
+# 
+# data_psy_1 <- here("data", "data_exp1_psycurve.csv") %>%
+#   read_csv() %>%
+#   mutate(Subject = factor(Subject),
+#          RTLog = log(RT),
+#          DistanceLog = log(Distance))
+# 
+# data_psy_2 <- here("data", "data_exp2_psycurve.csv") %>%
+#   read_csv() %>%
+#   mutate(Subject = factor(Subject),
+#          RTLog = log(RT),
+#          DistanceLog = log(Distance))
+# 
+# m1 <- glmer(Response ~ DistanceLog + (1|Subject), 
+#             data = data_psy_1,
+#             family = binomial)
+# summary(m1)
+# 
+# m2 <- glmer(Response ~ DistanceLog + (1|Subject), 
+#             data = data_psy_2,
+#             family = binomial)
+# summary(m2)
+# 
+# mfull <- glmer(Response ~ DistanceLog * Experiment + (1|Subject), 
+#                data = data_psy,
+#                family = binomial)
+# summary(mfull)
+# 
+# logit(response) = log(response/(1-response)) = mx + b = caca
+# response = logistic(caca) = 1/(1+exp(-caca))
+# response = 1/(1+exp(-(mx+b)))
+# response = 1/(1+exp(-k(x-x0)))
+# response = 1/(1+exp(-m(x+b/m))) = 1/(1+exp(-m(x-(-b/m))))
+# 
+# k = m
+# x0 = -b/m
