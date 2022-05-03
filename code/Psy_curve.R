@@ -1,6 +1,15 @@
 # Setup ####
 # Load packages
-pacman::p_load(here, tidyverse, magrittr, quickpsy, skimr, ggrepel, patchwork, ggpubr)
+pacman::p_load(
+here, # A Simpler Way to Find Your Files
+tidyverse, # Easily Install and Load the 'Tidyverse'
+magrittr, # A Forward-Pipe Operator for R
+quickpsy, # Fits Psychometric Functions for Multiple Groups
+skimr, # Compact and Flexible Summaries of Data
+ggrepel, # Automatically Position Non-Overlapping Text Labels with 'ggplot2'
+patchwork, # The Composer of Plots
+ggpubr # 'ggplot2' Based Publication Ready Plots
+)
 
 # Data loading and data wrangling ####
 
