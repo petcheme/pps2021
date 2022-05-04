@@ -35,12 +35,15 @@ default(read_csv) <- list(lazy = FALSE,
 
 # Load data
 
-# Staircases
+# Load all data...
 data_staircases <- 
-  rbind(read_csv(here("data", "data_exp1_staircases.csv")) %>%
-          mutate(Exp = 1, .before = 1),
-        read_csv(here("data", "data_exp2_staircases.csv")) %>%
-          mutate(Exp = 2, .before = 1))
+  rbind(read_csv(here("data", "data_exp1_staircases.csv")) %>% mutate(Exp = 1, .before = 1),
+        read_csv(here("data", "data_exp2_staircases.csv")) %>% mutate(Exp = 2, .before = 1),
+        # ...including the data discarded by this code (for reproducibility)
+        read_csv(here("data", "discarded", "data_exp1_staircases.csv")) %>%
+          mutate(Exp = 1, .before = 1) %>% mutate(OutlierDist = NA, OutlierSubj = NA),
+        read_csv(here("data", "discarded", "data_exp2_staircases.csv")) %>%
+          mutate(Exp = 2, .before = 1) %>% mutate(OutlierDist = NA, OutlierSubj = NA))
 
 ## Some useful mutates
 data_staircases <- data_staircases %>%
