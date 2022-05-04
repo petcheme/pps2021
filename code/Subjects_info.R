@@ -33,8 +33,9 @@ stats_demographics <- data_demographics %>%
 
   group_by(Experiment) %>%
   summarise(n = n(),
-            n_Fem     = sum(Gender == "F"),
-            n_Mus     = sum(`Years of Musical Education` > 0),
+            n_Fem      = sum(Gender == "F"),
+            n_RHand    = sum(`Dominant Hand` == "R"),
+            n_Mus      = sum(`Years of Musical Education` > 0),
             n_HearProb = sum(str_to_upper(`Hearing Problems`) != "NO"),
             n_VisiProb = sum(str_to_upper(`Vision Problems`) != "NO"),
             Age_mean  = mean(Age),
@@ -45,13 +46,17 @@ stats_demographics <- data_demographics %>%
 stats_demographics
 
 # Hearing problems
+hearing <-
 data_demographics %>%
   filter(str_to_upper(`Hearing Problems`) != "NO") %>%
   select(Experiment, Subject, Gender, Age, `Hearing Problems`)
 
 # Vision problems
+vision <-
 data_demographics %>%
   filter(str_to_upper(`Vision Problems`) != "NO") %>%
   select(Experiment, Subject, Gender, Age, `Vision Problems`)
 
+recruitment <- data_demographics %>% group_by(Recruitment) %>%
+  summarise(n())
 
