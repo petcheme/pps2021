@@ -91,6 +91,14 @@ subjects_out_of_range <- reversals_out_of_range %>%
 subjects_out_of_range %>%
   filter(DiscardBlock == TRUE) 
 
+# Same information a little more summarised
+subjects_out_of_range %>%
+  filter(DiscardBlock == TRUE) %>%
+  ungroup() %>%
+  select(-StairId, -ConsecutiveDistance, -DiscardBlock) %>%
+  distinct()
+
+
 # Display overall results for each subject
 subjects_out_of_range %>%
   group_by(Subject) %>%
