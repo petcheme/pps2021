@@ -1,3 +1,5 @@
+#### HEADER ####
+
 # Load libraries
 pacman::p_load(default,
                here,
@@ -14,6 +16,8 @@ default(read_csv) <- list(lazy = FALSE,
                 show_col_types = FALSE,
                        comment = "#")
 
+#### GROUP DEMOGRAPHICS ####
+
 # Load data
 data_demographics <- read_csv(here("data", "data_demographics.csv"))
 
@@ -25,13 +29,11 @@ data_demographics %>%
 data_demographics_excluded <- data_demographics %>%
   filter(Excluded == TRUE)
 
-data_demographics %<>% filter(Excluded == FALSE) 
-
+data_demographics %<>% filter(Excluded == FALSE) %>%
+  group_by(Experiment)
 
 # Obtain summary statistics
 stats_demographics <- data_demographics %>%
-
-  group_by(Experiment) %>%
   summarise(n = n(),
             n_Fem      = sum(Gender == "F"),
             n_RHand    = sum(`Dominant Hand` == "R"),
@@ -59,4 +61,68 @@ data_demographics %>%
 
 recruitment <- data_demographics %>% group_by(Recruitment) %>%
   summarise(n())
+
+#### COMPARISONS ACROSS GROUPS ####
+
+# Age comparison
+
+# t-test
+age.t.test <- data_demographics %>% 
+  t.test(data = ., Age ~ Experiment)
+
+age.t.test %>%
+  broom::tidy()
+
+# effect size
+age.effsize <- age.t.test %$%
+  abs((estimate[1] - estimate[2]) / stderr)
+
+# plot
+data_demographics %>% 
+  group_by(Experiment) %>% 
+  ggplot(aes(x=Age, fill=factor(Experiment))) +
+    geom_histogram(color="#e9ecef", alpha=0.6, binwidth = 5, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    facet_wrap(~ Experiment) +
+    geom_vline(data = stats_demographics, 
+               aes(xintercept = Age_mean), 
+               linetype = "dashed")
+
+
+# Reaching distance comparison
+
+# load data
+data_reach <- read_csv(here("data", "data_subjects.csv")) %>%
+  # filter(Subject != "S13") %>%
+  mutate(Experiment = factor(Experiment)) %>%
+  rename(Exp = Experiment) %>%
+  group_by(Exp)
+
+# stats
+stats_reach <- data_reach %>%
+  summarise(Reach_mean = mean(Reach),
+            Reach_sd   = sd(Reach),
+            Reach_min  = min(Reach),
+            Reach_max  = max(Reach))
+  
+# t-test
+reach.t.test <- data_reach %>% 
+  t.test(data = ., Reach ~ Exp)
+
+reach.t.test %>%
+  broom::tidy()
+
+# effect size
+reach.effsize <- reach.t.test %$%
+  abs((estimate[1] - estimate[2]) / stderr)
+
+# plot
+data_reach %>%
+  ggplot(aes(x=Reach, fill=Exp)) +
+  geom_histogram(color="#e9ecef", alpha=0.6, binwidth = 5, position = 'identity') +
+  scale_fill_manual(values=c("#69b3a2", "#404080")) +
+  facet_wrap(~ Exp) +
+  geom_vline(data = stats_reach, 
+             aes(xintercept = Reach_mean), 
+             linetype = "dashed")
 
