@@ -1,0 +1,238 @@
+#### HEADER ####
+
+# Load libraries
+pacman::p_load(default,
+               here,
+               magrittr,
+               tidyverse)
+
+pacman::p_load(ggplot2,
+               patchwork)
+
+# Clear workspace
+rm(list = ls())
+
+# Some default values
+default(read_csv) <- list(lazy = FALSE,
+                      progress = FALSE,
+                show_col_types = FALSE,
+                       comment = "#")
+
+# Parameters
+par <- list("exp" = 1,
+        "subject" = "S06",
+      "max_trial" = 30)
+
+# Load data
+data_stair <- 
+  rbind(here("data", "data_exp1_staircases.csv") %>% 
+          read_csv() %>%
+          mutate(Exp = "1"),
+        here("data", "data_exp2_staircases.csv") %>%
+          read_csv() %>%
+          mutate(Exp = "2")) %>%
+  mutate(Exp     = factor(Exp),
+         Subject = factor(Subject)) %>%
+  relocate(Exp, .before = Subject) %>%
+  mutate(StairId = factor(StairId),
+         Start   = factor(Start))
+
+#### DATA MANIPULATION ####
+
+# Filter experiment
+data_exp <- data_stair %>%
+  filter(Exp == par$exp)
+
+# Average PSEs #
+
+# Individual averages
+mean_pse_indiv <- data_exp %>%
+  group_by(Exp, Condition, BranchStart, Subject) %>%
+  filter(Reversal > 2) %>% 
+  #filter(Subject == "S01") %>%
+  summarise(Dist_mean = mean(Distance),
+            Dist_sd   =   sd(Distance),
+            n = n()) %>%
+  relocate(Subject) %>%
+  arrange(Subject)
+
+# Between-subjects average
+mean_pse <- mean_pse_indiv %>%
+  group_by(Exp, Condition, BranchStart) %>%
+  summarise(Dist_mean = mean(Dist_mean),
+            n = n())
+
+# Average trial of the first reversal #
+
+# Individual averages
+mean_fr_indiv <- data_exp %>%
+  group_by(Exp, Condition, BranchStart, Subject) %>%
+  filter(Reversal == 1) %>% 
+  summarise(Trial_mean = mean(Trial),
+            Trial_sd   =   sd(Trial),
+            n = n()) %>%
+  relocate(Subject) %>%
+  arrange(Subject)
+
+# Between-subjects average
+mean_fr <- mean_fr_indiv %>%
+  group_by(Exp, Condition, BranchStart) %>%
+  summarise(Trial_mean = mean(Trial_mean),
+            n = n())
+
+# Filter data by staircase type # 
+
+# Simple staircases
+data_exp_simple <- data_exp %>%
+  filter(Condition == "simple") %>%
+  group_by(Start, Trial) %>%
+  summarise(Dist_mean = mean(Distance),
+            Dist_sd   =   sd(Distance),
+            RTlog_mean = mean(log10(RT)),
+            RTlog_sd   =   sd(log10(RT)),
+            n = n()) %>%
+  filter(Trial <= par$max_trial)
+
+# Dual staircases
+data_exp_dual <- data_stair %>%
+  filter(Exp == par$exp, Condition == "dual") %>%
+  
+  # this mutate should not be necessary
+  mutate(Branch = if_else((Start == "near" & StairId == 1) |
+                            (Start == "far"  & StairId == 2),
+                          "near", "far")) %>%
+  
+  group_by(Branch, Trial) %>%
+  summarise(Dist_mean  = mean(Distance),
+            Dist_sd    =   sd(Distance),
+            RTlog_mean = mean(log10(RT)),
+            RTlog_sd   =   sd(log10(RT)),
+            n = n()) %>%
+  filter(Trial <= par$max_trial)
+
+#### FIRST ROW: Individual example ####
+
+# Filter subject data
+data_subject <- data_stair %>%
+  filter(Subject == par$subject) %>%
+  filter(Trial <= par$max_trial)
+
+# Simple staircases
+data_panel1.1 <- data_subject %>%
+  filter(Condition == "simple", Block < 3) 
+
+# some testing code
+# data_panel1.1 %>%
+#   filter(Reversal > 2) %>% 
+#   group_by(Subject, BranchStart) %>%
+#   summarise(Dist_mean = mean(Distance))
+
+panel1.1 <- data_panel1.1 %>%
+  ggplot(aes(x=Trial, y=Distance, group=Start)) +
+    geom_point(aes(color = Start)) + 
+    geom_line(aes(color = Start)) +
+    # scale_color_manual(values = c("#F8766D", "#00BFC4")) +
+    scale_y_continuous(trans='log10') +
+    ylab("Target distance [cm]") +
+  
+    # PSEs (here I take the input data and branch the analysis)
+    geom_hline(data = . %>%
+                 filter(Reversal > 2) %>%
+                 group_by(Subject, BranchStart) %>%
+                 summarise(Dist_mean = mean(Distance)),
+             aes(yintercept = Dist_mean,
+                 color = BranchStart),
+             linetype = "dashed")
+
+panel1.1
+
+# Dual staircases
+data_panel1.2 <- data_subject %>%
+  filter(Condition == "dual", Block == 2)
+
+panel1.2 <- data_panel1.2 %>%
+  ggplot(aes(x=Trial, y=Distance, group = BranchStart)) +
+    geom_point(aes(color = BranchStart)) + 
+    geom_line(aes(color = BranchStart)) +
+    scale_y_continuous(trans='log10') +
+    #scale_color_manual(values = c("#00BFC4", "#F8766D")) +
+    ylab(NULL)  + 
+  
+    # PSEs (here I take the input data and branch the analysis)
+    geom_hline(data = . %>%
+                 filter(Reversal > 2) %>%
+                 group_by(Subject, BranchStart) %>%
+                 summarise(Dist_mean = mean(Distance)),
+               aes(yintercept = Dist_mean,
+                   color = BranchStart),
+               linetype = "dashed")
+  
+panel1.2
+
+#### 2ND ROW: Average target position ####
+
+# Simple staircases
+panel2.1 <- data_exp_simple %>%
+  ggplot(aes(x=Trial, y=Dist_mean, group=Start)) +
+  geom_point(aes(color = Start)) + geom_line(aes(color = Start)) +
+  scale_y_continuous(trans='log10') +
+  ylab("Target distance [cm]") +
+  # average pse
+  geom_hline(data = mean_pse %>%
+               filter(Condition == "simple"), 
+             aes(yintercept = Dist_mean, color = BranchStart),
+             linetype = "dashed") +
+  # average first reversal
+  geom_vline(data = mean_fr %>%
+               filter(Condition == "simple"), 
+             aes(xintercept = Trial_mean, color = BranchStart),
+             linetype = "dashed")
+  
+# Dual staircases
+panel2.2 <- data_exp_dual %>%
+    ggplot(aes(x=Trial, y=Dist_mean, group = Branch)) +
+    geom_point(aes(color = Branch)) + geom_line(aes(color = Branch)) +
+    scale_y_continuous(trans='log10') +
+    # average pse
+    geom_hline(data = mean_pse %>%
+               filter(Condition == "dual"), 
+             aes(yintercept = Dist_mean, color = BranchStart),
+             linetype = "dashed") +
+    # average first reversal
+    geom_vline(data = mean_fr %>%
+               filter(Condition == "dual"), 
+               aes(xintercept = Trial_mean, color = BranchStart),
+               linetype = "dashed") +
+    ylab(NULL)
+
+#### 3RD ROW: Response times ####
+
+# Simple staircases
+panel3.1 <- data_exp_simple %>%
+  ggplot(aes(x=Trial, y=RTlog_mean, group=Start)) +
+  geom_point(aes(color = Start)) + geom_line(aes(color = Start)) +
+  ylab("Response time [log10(s)]") +
+  geom_vline(data = mean_fr %>%
+             filter(Condition == "simple"), 
+             aes(xintercept = Trial_mean, color = BranchStart),
+             linetype = "dashed")
+
+# Dual staircases
+panel3.2 <- data_exp_dual %>%
+  ggplot(aes(x=Trial, y=RTlog_mean, group=Branch)) +
+  geom_point(aes(color = Branch)) + geom_line(aes(color = Branch)) +
+  ylab("Response time [log10(s)]") +
+  geom_vline(data = mean_fr %>%
+             filter(Condition == "dual"), 
+             aes(xintercept = Trial_mean, color = BranchStart),
+             linetype = "dashed")
+
+#### PATCHWORK PLOTS ####
+
+(panel1.1 + labs(subtitle="Simple") + theme(plot.subtitle = element_text(hjust = 0.5))  |
+ panel1.2 + labs(subtitle="Dual")   + theme(plot.subtitle = element_text(hjust = 0.5))) /
+(panel2.1 + labs(subtitle="Simple") + theme(plot.subtitle = element_text(hjust = 0.5))  | 
+ panel2.2 + labs(subtitle="Dual")   + theme(plot.subtitle = element_text(hjust = 0.5))) /
+(panel3.1 | 
+ panel3.2)
+
