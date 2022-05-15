@@ -1,12 +1,13 @@
-library(here)
-library(magrittr)
-library(purrr)
-library(tidyverse)
-
-library(ggplot2)
-
 # Note: This script is a full tidyverse version of the previous one
 
+#### HEADER ####
+
+# Load libraries
+pacman::p_load(default,      # redefine default parameters
+               here,         # path management
+               ggplot2,
+               magrittr,     # pipes support
+               tidyverse)
 
 # Clear workspace
 rm(list = ls())
@@ -31,10 +32,10 @@ par.files = c("data_exp1_psycurve.csv",
               "data_exp2_staircases.csv")
 
 # which columns define groups, depending on the dataset (see below)
-par.columns <- c("Subject", "Distance", "Condition", "Start")
+par.columns <- c("Subject", "Distance", "Method")
 
 
-# --- Analysis ---
+#### DATA PROCESSING ####
 
 # Start by building the file index
 files_index <- 
@@ -51,6 +52,16 @@ my_data <- files_index %>%
                                                         progress = FALSE,       # /  third flag prevents file locking in Windows
                                                         lazy     = FALSE)) %>% 
             tibble(data = .))
+
+# Create Method column for staircases datasets, with values: "simple-near", "simple-far", and "dual"
+my_data %<>%
+  mutate(data = map_if(data, 
+                       Method == "staircases",
+                       ~ .x %>% 
+                         mutate(Method = if_else(Condition == "dual",
+                                                 Condition, 
+                                          paste0(Condition, "-", Start))
+                                ) ))
 
 # Obtain group columns for each dataset -maybe this can be made simpler
 my_data %<>% 
@@ -75,6 +86,8 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
                                   # obtain IQ range
                                   mutate(low.s.d = lower_iqr(logRT),
                                          upp.s.d = upper_iqr(logRT)) %>%
+                                  # how many points in each group (debug only)
+                                  #mutate(n = n()) %>%
                                   mutate(OutlierDist = logRT < low.s.d |
                                                        logRT > upp.s.d) %>%
                                   # NA data is not considered outlier
@@ -89,6 +102,8 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
                                   # obtain IQ range
                                   mutate(low.s = lower_iqr(logRT),
                                          upp.s = upper_iqr(logRT)) %>%
+                                  # how many points in each group (debug only)
+                                  #mutate(n = n()) %>%
                                   mutate(OutlierSubj = logRT < low.s |
                                                        logRT > upp.s) %>%
                                   # NA data is not considered outlier
@@ -96,9 +111,9 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
                                   select(-low.s, -upp.s)
                                   ))
 
-# Remove column logRT
-my_data %<>% mutate(data = map( data, ~ .x %>% 
-                                  select(-logRT) 
+# Remove columns Method and logRT
+my_data %<>% mutate(data = map( data, ~ .x %>% ungroup() %>%
+                                  select(-any_of( c("logRT", "Method") )) 
                                   ))
 
 # Just need to save results
