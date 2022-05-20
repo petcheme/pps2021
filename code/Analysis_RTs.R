@@ -203,7 +203,7 @@ table_plots <- data_rt %>%
       # data points
       geom_point(data = . %>% unnest(data),
                  aes(x=Distance, y=RTlog), size = .5) +
-      facet_grid(Subject ~ Method, scales = "free_y") +
+      facet_grid(Subject ~ Method, scales = "free_y", drop = FALSE) +
       theme_classic() + 
       ylab("RT") + 
       # fitted curves
