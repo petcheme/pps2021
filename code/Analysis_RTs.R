@@ -180,14 +180,19 @@ data_rt %<>%
     map_if(model, model != "error",
       function(m) tibble(x = seq(1,300)) %>%
         # predict makes this line independent of the funcion choice
-        mutate(y = predict(m, tibble(Distance = x))) )) 
+        mutate(y = predict(m, tibble(Distance = x))),
+      # allow failed fits to have predictions (NA)
+      .else = function (m) tibble(x = seq(1,300)) %>%
+        mutate(y = NA*x) 
+        )) 
 
 
 # Then, map subjects to row plots
 table_plots <- data_rt %>%
   # nest all data by subject
   group_by(Subject) %>%
-  filter(model != "error") %>%
+  # failed fits are included in the plot (their predictions count as NA)
+  #filter(model != "error") %>%
   nest() %>% 
   # map subjects and their data to a custom plotting function
   mutate(plot = map2(Subject, data, function(subject, data)
@@ -200,7 +205,7 @@ table_plots <- data_rt %>%
                  aes(x=Distance, y=RTlog), size = .5) +
       facet_grid(Subject ~ Method, scales = "free_y") +
       theme_classic() + 
-      xlab("RT [log10(s)]") + 
+      ylab("RT") + 
       # fitted curves
       geom_line(data = . %>% unnest(fit_curve),
                 aes(x=x, y=y), color = "red")
@@ -228,12 +233,13 @@ table_plots %<>%
                        )) %>%
   # remove x-axis elements for all but the last subject
   mutate(plot = map_if(plot, Subject != last(Subject),
-                       function(p) p + xlab(label = "") + 
+                       function(p) p + xlab(label = NULL) + 
                          theme(axis.text.x = element_blank()) )) %>%
   # some global changes: plot margins and font size
   mutate(plot = map(plot, function(p)
-    p + theme(plot.margin = unit( c(0,0,0,0),"mm")) +
-        theme(text = element_text(size= 8)) ))
+    p + theme(plot.margin = unit( c(0,0,0,0),"mm"),
+              text = element_text(size= 8)) + 
+              guides(fill = "none") ))
 
 # Finally, I get one single plot for everything using patchwork...
 table_plots %<>% group_by(Exp) %>% 
@@ -246,7 +252,7 @@ table_plots %<>% group_by(Exp) %>%
 # ...and save it in PNG format
 table_plots %$% map2(Exp, full_plot, function(Exp, plot)
   ggsave(plot = plot , filename = paste0("RTs_fit_exp", Exp, ".png"),
-         width = 14, height = 45, units = "cm", dpi = 200))
+         width = 8*1.35, height = 28*1.35, units = "cm", dpi = 300))
 
 #### 3. PSEs COMPARISON ####
 
