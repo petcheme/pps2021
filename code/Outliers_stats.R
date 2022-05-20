@@ -5,7 +5,7 @@ pacman::p_load(default,      # redefine default parameters
                here,         # path management
                ggplot2,
                magrittr,     # pipes support
-               purrr,
+               purrr,        # mapping functions
                tidyverse)
 
 # Clear workspace
@@ -23,9 +23,6 @@ my_files = c("data_exp1_psycurve.csv",
              "data_exp2_psycurve.csv",
              "data_exp1_staircases.csv",
              "data_exp2_staircases.csv")
-
-# which columns define groups, depending on the dataset (see below)
-par.columns <- c("Condition", "Start")
 
 
 #### ANALYSIS ####
@@ -50,7 +47,7 @@ my_data %<>%
                        .f = ~ .x %>% 
                          mutate(Method = if_else(Condition == "dual",
                                                  Condition, 
-                                                 paste0(Condition, "-", Start)), .before=2) %>%
+                                          paste0(Condition, "-", Start)), .before=2) %>%
                          select(-Condition, -Start),
                        .else = ~ .x %>% mutate(Method = "psy-curve", .before=2)
                        ))
@@ -62,7 +59,7 @@ stats <- my_data %>%
                        summarise(nOutDist = sum(OutlierDist),
                                  nOutSubj = sum(OutlierSubj),
                                  nOutBoth = sum(OutlierSubj | OutlierDist),
-                                 n = n()) %>%
+                                 n = n(), .groups = "drop") %>%
                        tibble() )) %>%
   select(Exp, stats) %>%
   unnest(stats)
@@ -78,7 +75,8 @@ my_data %>% mutate(n = map_dbl(data, function(x) nrow(x))) %$% sum(n)
 stats_subject <- stats %>% 
   group_by(Exp, Subject) %>% 
   summarise(nOut = sum(nOutBoth),
-            nTot = sum(n)) %>%
+            nTot = sum(n),
+            .groups = "drop") %>%
   mutate(prop = nOut / nTot)
 
 # Stats grouped by Experiment
@@ -92,10 +90,14 @@ stats_exp <- stats_subject %>%
 stats_method <- stats %>%
   group_by(Exp, Method) %>% 
   summarise(nOut = sum(nOutBoth),
-            nTot = sum(n)) %>%
+            nTot = sum(n),
+            .groups = "drop") %>%
   mutate(prop = nOut / nTot) %>%
   arrange(-prop)
 
-
-
-
+# (some subsets of the previous grouping)
+stats_method %>%
+  arrange(Exp, Method) %>%
+  filter(Method != "psy-curve") %>%
+  group_by(Exp) %>%
+  summarise(n = sum(nOut), N = sum(nTot))
