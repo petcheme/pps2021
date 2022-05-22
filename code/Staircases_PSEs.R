@@ -92,7 +92,7 @@ data_reversals %>%
   summarise(n = n(), .groups = "drop_last") %>%
   filter (n != 10)
 
-# Mean reversal for each Subject and Block
+# Mean reversal (i.e. single PSE) for each Subject and Block
 stat_reversals <- data_reversals %>%
   # filter first n reversals as they must be discarded for PSE calculation
   filter(Reversal > par.first_n_reversals_discarded) %>%
@@ -148,14 +148,36 @@ ggplot(data = stat_pse) +
              aes(x = Condition, y = m), color = "red", size=4, alpha=0.5)
 
 
-# Quick and dirty plot of the effect of removing outlying reversals. First,
-# obtain stat_pse after removing outliers and rename it as stat_pse0. Then,
-# comment the line that remove outliers (line 100), and reobtain stat_pse.
-stat_pse0 <- stat_pse
+# Quick and dirty plot of the effect of removing outlying reversals. Repeat
+# the calculation of the PSEs without filtering RT outliers, then join with
+# the PSEs that already were calculated.
+
+# Single PSEs
+stat_reversals0 <- data_stair %>% 
+  filter(Reversal > 0) %>%
+  # discard reversals before step halving
+  filter(Reversal > par.first_n_reversals_discarded) %>%
+  # obtain mean, sd, etc.
+  summarise(mean = mean(Distance),
+            sd = sd(Distance),
+            n = n(), .groups = "keep") %>%
+  # full condition column
+  mutate(ConditionFull = if_else(Condition == "dual",
+                                 Condition,
+                                 paste(Condition, Start, sep = '-')))
+
+# Average PSEs for simple-near, simple-far, and dual
+stat_pse0 <- stat_reversals0 %>% 
+  group_by(Exp, Subject, ConditionFull) %>% 
+  summarise(PSE = mean(mean), 
+            sd = sd(mean),
+            n = n(), .groups = "drop_last") %>%
+  rename(Condition = ConditionFull)
 
 stat_pse0 <- 
   inner_join(stat_pse0, stat_pse, by = c("Exp", "Subject", "Condition"))
 
+# plot
 stat_pse0 %>% ggplot(aes(x = PSE.x, y = PSE.y)) +
   geom_point(aes(color = Condition)) +
   # identity
@@ -167,4 +189,7 @@ stat_pse0 %>% ggplot(aes(x = PSE.x, y = PSE.y)) +
   geom_abline(slope=1.1,intercept=0, linetype= "dashed", color = "darkgrey") +
   geom_abline(slope=0.9,intercept=0, linetype= "dashed", color = "darkgrey")
   
+# correlation
+stat_pse0 %$% cor.test(PSE.x, PSE.y)
+
 
