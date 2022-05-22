@@ -1,5 +1,6 @@
 # Load libraries
-pacman::p_load(here, 
+pacman::p_load(default,
+               here, 
                ggplot2, 
                magrittr, 
                tidyverse)
@@ -43,11 +44,10 @@ info_blocks <- data_stair %>% ungroup() %>% distinct(Condition, Block) %>%
 # Conditions performed by each subject (48 subjects x 4 combinations of
 # conditions, minus 5 rows excluded due to reversals out of range = 187 rows)
 info_conds_subjects <- data_stair %>%
-  ungroup() %>%
   group_by(Subject, Condition, Block, Start) %>% 
-  summarise(n = n(), .groups = "keep") %>%
+  summarise(n = n(), .groups = "drop") %>%
   group_by(Subject, Condition, Start) %>%
-  summarise(n= n())
+  summarise(n= n(), .groups = "drop_last")
 
 # Summary of blocks performed by each subject
 info_conds_subjects_summary <- info_conds_subjects %>%
@@ -61,7 +61,7 @@ info_conds_subjects_summary %$% sum(n)
 
 # There were four conditions (in the table, Condition means Staircase Type)
 # Simple staircases had 4 repetitions, dual had 2
-info_conds <- info_conds_subjects %>% ungroup() %>% 
+info_conds <- info_conds_subjects %>%
   group_by(Condition, Start, n) %>% 
   distinct(Condition, Start, n)
 
@@ -70,7 +70,7 @@ info_conds <- info_conds_subjects %>% ungroup() %>%
 info_conds %>% arrange(Condition, Start, n)
 
 # ...the experimental design was this:
-info_conds %>% group_by(Condition, Start) %>% summarize(n = max(n))
+info_conds %>% group_by(Condition, Start) %>% summarize(n = max(n), .groups = "keep")
 
 
 # --- Here starts data extraction ---
@@ -79,27 +79,37 @@ info_conds %>% group_by(Condition, Start) %>% summarize(n = max(n))
 data_stair %<>% group_by(Exp, Subject, Condition, Block, Start, StairId)
 
 # How many groups: 370 (48 subjects x 8 staircases each - 14 staircases excluded)
-data_stair %>% summarise(n=n())
+data_stair %>% summarise(n=n(), .groups = "drop_last")
 
 # Filter reversals. There are 4437 reversals: 370 staircases x 12 reversals each,
 # minus three reversals lost in the way)
 data_reversals <- data_stair %>% filter(Reversal > 0) 
 
+# Lost reversals: S01 and S66
+data_reversals %>%
+  # ignore first n reversals (see below)
+  filter(Reversal > par.first_n_reversals_discarded) %>%
+  summarise(n = n(), .groups = "drop_last") %>%
+  filter (n != 10)
+
 # Mean reversal for each Subject and Block
 stat_reversals <- data_reversals %>%
   # filter first n reversals as they must be discarded for PSE calculation
   filter(Reversal > par.first_n_reversals_discarded) %>%
+  # filter reversals with outlying RTs  
+  filter(!(OutlierDist | OutlierSubj)) %>%
+  # finally obtain mean, sd, etc.
   summarise(mean = mean(Distance),
               sd = sd(Distance),
                n = n(), .groups = "keep")
 
-# Lost reversals: S01 and S66
+# Lost + discarded reversals
 stat_reversals %>% filter (n != 10)
 
 # Collapse dual-near and dual-far into a single condition: dual
 # (Should check that there are not significant differences)
 stat_reversals %<>%
-  mutate(ConditionFull = ifelse(Condition == "dual",
+  mutate(ConditionFull = if_else(Condition == "dual",
                                 Condition,
                                 paste(Condition, Start, sep = '-')))
 
@@ -108,7 +118,7 @@ stat_pse <- stat_reversals %>%
   group_by(Exp, Subject, ConditionFull) %>% 
   summarise(PSE = mean(mean), 
              sd = sd(mean),
-              n = n()) %>%
+              n = n(), .groups = "drop_last") %>%
   rename(Condition = ConditionFull)
 
 # Obtain mean PSEs (averaged between subjects)
