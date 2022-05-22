@@ -49,16 +49,18 @@ my_data %<>%
                                                  Condition, 
                                           paste0(Condition, "-", Start)), .before=2) %>%
                          select(-Condition, -Start),
-                       .else = ~ .x %>% mutate(Method = "psy-curve", .before=2)
+                       .else = ~ .x %>% mutate(Method = "psy-curve", .before=2) %>%
+                         mutate(Reversal = Inf)
                        ))
 
 # Outlier stats grouped by subject and method
 stats <- my_data %>%
   mutate(stats = map(data, function(x) x %>%
                        group_by(Subject, Method) %>%
-                       summarise(nOutDist = sum(OutlierDist),
-                                 nOutSubj = sum(OutlierSubj),
-                                 nOutBoth = sum(OutlierSubj | OutlierDist),
+                       summarise(nOutDist  = sum(OutlierDist),
+                                 nOutSubj  = sum(OutlierSubj),
+                                 nOutBoth  = sum(OutlierSubj | OutlierDist),
+                                 nOutBothR = sum(Reversal > 2 & (OutlierSubj | OutlierDist)),
                                  n = n(), .groups = "drop") %>%
                        tibble() )) %>%
   select(Exp, stats) %>%
@@ -74,25 +76,31 @@ my_data %>% mutate(n = map_dbl(data, function(x) nrow(x))) %$% sum(n)
 # Stats grouped by Subject
 stats_subject <- stats %>% 
   group_by(Exp, Subject) %>% 
-  summarise(nOut = sum(nOutBoth),
-            nTot = sum(n),
+  summarise(nOut  = sum(nOutBoth),
+            nOutR = sum(nOutBothR),
+            nTot  = sum(n),
             .groups = "drop") %>%
-  mutate(prop = nOut / nTot)
+  mutate(prop  = nOut  / nTot,
+         propR = nOutR / nTot)
 
 # Stats grouped by Experiment
 stats_exp <- stats_subject %>%
   group_by(Exp) %>%
-  summarise(nOut = sum(nOut),
-            nTot = sum(nTot)) %>%
-  mutate(prop = nOut / nTot)
+  summarise(nOut  = sum(nOut),
+            nOutR = sum(nOutR),
+            nTot  = sum(nTot)) %>%
+  mutate(prop  = nOut  / nTot,
+         propR = nOutR / nTot)
 
 # Stats grouped by Method (within Experiment)
 stats_method <- stats %>%
   group_by(Exp, Method) %>% 
-  summarise(nOut = sum(nOutBoth),
-            nTot = sum(n),
+  summarise(nOut  = sum(nOutBoth),
+            nOutR = sum(nOutBothR),
+            nTot  = sum(n),
             .groups = "drop") %>%
-  mutate(prop = nOut / nTot) %>%
+  mutate(prop  = nOut  / nTot,
+         propR = nOutR / nTot) %>%
   arrange(-prop)
 
 # (some subsets of the previous grouping)
@@ -100,4 +108,8 @@ stats_method %>%
   arrange(Exp, Method) %>%
   filter(Method != "psy-curve") %>%
   group_by(Exp) %>%
-  summarise(n = sum(nOut), N = sum(nTot))
+  summarise(n  = sum(nOut),
+            nR = sum(nOutR),
+            N  = sum(nTot)) %>%
+  mutate(prop  = n / N,
+         propR = nR / N)
