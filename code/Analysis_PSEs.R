@@ -211,10 +211,13 @@ comp_list %<>%
 
 # add significance labels
 comp_list %<>%
-  mutate(Signif = if_else(p.value.adj < 0.001, '***',
-                  if_else(p.value.adj < 0.01,  '**',
-                  if_else(p.value.adj < 0.05,  '*', 'ns'))))
-    
+  mutate(Signif = 
+    # stats::symnum symbolically encodes a vector
+    symnum(p.value.adj, 
+           cutpoints = c(0,
+                         0.0001, 0.001, 0.01, 0.05, 1),
+           symbols   = c("****", "***", "**", "*", "ns")) %>% as.character())
+
 # print table with all the stats
 comp_list %>% rename(FiltOut = FilterOutliers) %>% print(n=100)
   
