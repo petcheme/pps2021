@@ -218,16 +218,32 @@ comp_list %<>%
                          0.0001, 0.001, 0.01, 0.05, 1),
            symbols   = c("****", "***", "**", "*", "ns")) %>% as.character())
 
+# calculate effect sizes
+comp_list %<>%
+  # obtain s.d. of differences
+  mutate(sd_diff = estimate / t*sqrt(df+1), .before = "t") %>%
+  mutate(d_z = estimate / sd_diff, .before = "t")
+
 # print table with all the stats
 comp_list %>% rename(FiltOut = FilterOutliers) %>% print(n=100)
   
 #### 4b. t-tests by hand (for checking the results) ####
 
+aux <- 
 inner_join(data_pse %>% filter(Method == "simple-far"),
            data_pse %>% filter(Method == "simple-near"),
-           by = c("Subject", "Exp")) %>%
+           by = c("Subject", "Exp"))
+
+aux %>%
   filter(Exp == 2) %$%
   t.test(x=PSE.x, y = PSE.y, paired = TRUE)
+
+# also check effect sizes
+aux %>% mutate( diff = PSE.x - PSE.y) %>%
+  summarise(mean_diff = mean(diff),
+              sd_diff =   sd(diff)) %>%
+  mutate(d = mean_diff / sd_diff)
+
 
 #### 5 EMMEANS ANALYSIS ####
 
