@@ -1,3 +1,5 @@
+# ---- Header ----
+
 # Load libraries
 pacman::p_load(default,
                here, 
@@ -31,7 +33,7 @@ data_stair <- here("data", "data_exp1_staircases.csv") %>%
   mutate(StairId = factor(StairId))
 
 
-# --- Some information about the dataset ---
+# ---- Some information about the dataset ----
 
 # How many subjects: 48
 info_subjects <- data_stair %>% ungroup() %>% distinct(Exp, Subject)
@@ -73,7 +75,7 @@ info_conds %>% arrange(Condition, Start, n)
 info_conds %>% group_by(Condition, Start) %>% summarize(n = max(n), .groups = "keep")
 
 
-# --- Here starts data extraction ---
+# ---- Here starts data extraction ----
 
 # Grouping at the lowest level -includes StairId for dual staircases
 data_stair %<>% group_by(Exp, Subject, Condition, Block, Start, StairId)
@@ -130,12 +132,15 @@ mean_pse <- stat_pse %>%
               n = n(), .groups = "keep") %>%
   # sem and confidence intervals
   mutate(sem = sd / sqrt(n),
-         low = m - qt(1-par.alpha/2, n-1)*sem,
-         upp = m + qt(1-par.alpha/2, n-1)*sem)
+      t_crit = qt(1-par.alpha/2, n-1),
+         low = m - t_crit*sem,
+         upp = m + t_crit*sem)
             
 # Extract data to CSV
 stat_pse %>% write_csv(here("data", "data_PSE_staircases.csv"))
 
+
+# ---- Some plots ----
 
 # Plot for each experiment (individual + average)
 ggplot(data = stat_pse) +
