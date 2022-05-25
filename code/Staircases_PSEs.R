@@ -96,6 +96,7 @@ data_reversals %>%
 
 # Mean reversal (i.e. single PSE) for each Subject and Block
 stat_reversals <- data_reversals %>%
+  group_by(BranchStart, .add = TRUE) %>%
   # filter first n reversals as they must be discarded for PSE calculation
   filter(Reversal > par.first_n_reversals_discarded) %>%
   # filter reversals with outlying RTs  
@@ -198,3 +199,78 @@ stat_pse0 %>% ggplot(aes(x = PSE.x, y = PSE.y)) +
 stat_pse0 %$% cor.test(PSE.x, PSE.y)
 
 
+# ---- Some more analysis ----
+
+# Max average trial (i.e. average duration measured in trials)
+data_stair %>%
+  group_by(Exp, Condition, BranchStart, Subject, Block) %>%
+  summarise(maxTrial = max(Trial)) %>%
+  summarise(maxTrial = mean(maxTrial)) %>%
+  summarise(maxTrial = mean(maxTrial),
+            n = n()) %>%
+  summarise(maxTrial = mean(maxTrial))
+
+
+# Obtain PSEs for each condition and branch
+mean_pse_branches <- stat_reversals %>% 
+  mutate(CondBranch = paste0(Condition, "-", BranchStart)) %>%
+  group_by(Exp, CondBranch, Subject) %>% 
+  summarise(PSE = mean(mean), 
+            sd = sd(mean),
+            n = n(), .groups = "drop_last") %>%
+  rename(Condition = CondBranch) %>%
+  summarise( m = mean(PSE),
+            sd = sd(PSE),
+             n = n()) %>%
+  # standard error and t critical value
+  mutate(sem = sd / sqrt(n),
+      t_crit = qt(1-par.alpha/2, n-1),
+         low = m - t_crit*sem,
+         upp = m + t_crit*sem)
+
+# Display average PSE
+options(pillar.sigfig = 4) # set significant digits displayed in tibbles
+
+# branches
+mean_pse_branches %>%
+  arrange(Exp, desc(Condition))
+
+# dual collapsed
+mean_pse %>%
+  arrange(Exp, desc(Condition))
+
+
+# Average trial of first reversal
+mean_trial_first_reversal <- data_stair %>%
+  mutate(CondBranch = paste0(Condition, "-", BranchStart), .after = Subject) %>%
+  group_by(Exp, CondBranch, Subject) %>%
+  select(-Condition, - BranchStart, -Start, -Response, -StairId, -RT, -Distance) %>%
+  filter(Reversal == 1) %>%
+  summarise(mean0 = mean(Trial),
+            n = n()) %>%
+  summarise( m = mean(mean0),
+            sd = sd(mean0),
+             n = n()) %>%
+  mutate(sem = sd / sqrt(n),
+      t_crit = qt(1-par.alpha/2, n-1)) %>%
+  mutate(low = m - t_crit*sem,
+         upp = m + t_crit*sem)
+
+mean_trial_first_reversal %>%
+  arrange(Exp, desc(CondBranch))
+
+
+# Comparison between branches (dual)
+stat_reversals %>%
+  filter(Exp == 1) %>%
+  ungroup() %>%
+  mutate(CondBranch = paste0(Condition, "-", BranchStart),
+         .after = Subject) %>%
+  select(-Exp, -Condition,-Block,-Start,-StairId,-BranchStart,-ConditionFull) %>%
+  group_by(CondBranch, Subject) %>%
+  summarise(mean = mean(mean),
+            n=n()) %>%
+  {inner_join(dplyr::filter(. ,CondBranch == "dual-near"),
+              dplyr::filter(., CondBranch == "dual-far"),
+              by = "Subject")} %$%
+  t.test(mean.x, mean.y, paired = TRUE)
