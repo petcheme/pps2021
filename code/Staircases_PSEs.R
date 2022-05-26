@@ -240,24 +240,6 @@ mean_pse %>%
   arrange(Exp, desc(Condition))
 
 
-# Average trial of first reversal
-mean_trial_first_reversal <- data_stair %>%
-  mutate(CondBranch = paste0(Condition, "-", BranchStart), .after = Subject) %>%
-  group_by(Exp, CondBranch, Subject) %>%
-  select(-Condition, - BranchStart, -Start, -Response, -StairId, -RT, -Distance) %>%
-  filter(Reversal == 1) %>%
-  summarise(mean0 = mean(Trial),
-            n = n()) %>%
-  summarise( m = mean(mean0),
-            sd = sd(mean0),
-             n = n()) %>%
-  mutate(sem = sd / sqrt(n),
-      t_crit = qt(1-par.alpha/2, n-1)) %>%
-  mutate(low = m - t_crit*sem,
-         upp = m + t_crit*sem)
-
-mean_trial_first_reversal %>%
-  arrange(Exp, desc(CondBranch))
 
 
 # Comparison between branches (dual)
