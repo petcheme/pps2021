@@ -118,3 +118,52 @@ ggplot(data = stat_firstrev,
   ylab("Trial of first reversal") +
   xlab("Method x Start") + 
   theme_classic()
+
+
+# ---- Statistical analysis ----
+
+# Exp 1:
+stat_firstrev %>%
+  ungroup() %>%
+  filter(!IsOutlier, Exp == 1) %>%
+  select(CondBranch, Subject, Trial_mean) %>%
+  {inner_join(
+    dplyr::filter(., CondBranch == "dual-near"),
+    dplyr::filter(., CondBranch == "simple-near"),
+    by = "Subject")} %$%
+  t.test(Trial_mean.x - Trial_mean.y,
+         alternative = "greater")
+
+stat_firstrev %>%
+  ungroup() %>%
+  filter(!IsOutlier, Exp == 1) %>%
+  select(CondBranch, Subject, Trial_mean) %>%
+  {inner_join(
+    dplyr::filter(., CondBranch == "dual-far"),
+    dplyr::filter(., CondBranch == "simple-far"),
+    by = "Subject")} %$%
+  t.test(Trial_mean.x - Trial_mean.y,
+         alternative = "greater")
+
+# Exp 2:
+stat_firstrev %>%
+  ungroup() %>%
+  filter(!IsOutlier, Exp == 2) %>%
+  select(CondBranch, Subject, Trial_mean) %>%
+  {inner_join(
+    dplyr::filter(., CondBranch == "dual-near"),
+    dplyr::filter(., CondBranch == "simple-near"),
+    by = "Subject")} %$%
+  t.test(Trial_mean.x - Trial_mean.y,
+         alternative = "greater")
+
+stat_firstrev %>%
+  ungroup() %>%
+  filter(!IsOutlier, Exp == 2) %>%
+  select(CondBranch, Subject, Trial_mean) %>%
+  {inner_join(
+    dplyr::filter(., CondBranch == "dual-far"),
+    dplyr::filter(., CondBranch == "simple-far"),
+    by = "Subject")} %$%
+  t.test(Trial_mean.x - Trial_mean.y,
+         alternative = "greater")
