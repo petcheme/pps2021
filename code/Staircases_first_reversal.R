@@ -1,7 +1,8 @@
 # ---- Header ----
 
 # Load libraries
-pacman::p_load(default,
+pacman::p_load(broom,
+               default,
                here,
                ggplot2,
                magrittr,
@@ -121,6 +122,49 @@ ggplot(data = stat_firstrev,
 
 
 # ---- Statistical analysis ----
+
+# purr::pmap version (one single pipe mapped repeatedly over our data)
+comp_list <-
+  crossing(Exp = factor(c(1,2)),
+           tibble(x = c(  "dual-near",   "dual-far"), 
+                  y = c("simple-near", "simple-far")),
+           tibble(stat_firstrev %>%
+                    ungroup() %>%
+                    nest(data = everything())) )
+comp_list %<>%
+  mutate(t.test = pmap(list(Exp, x, y, data),
+                  function(my_exp, cond_x, cond_y, my_data)
+                    my_data %>%
+                      ungroup() %>%
+                      # filter outliers, also select experiment
+                      filter(!IsOutlier, Exp == my_exp) %>%
+                      select(CondBranch, Subject, Trial_mean) %>%
+                      # fork the pipe to make a join of the data with itself
+                      {inner_join(
+                        # pair data based on subject
+                        dplyr::filter(., CondBranch == cond_x),
+                        dplyr::filter(., CondBranch == cond_y),
+                        by = "Subject")} %$%
+                      # here comes t-test
+                      t.test(Trial_mean.x - Trial_mean.y,
+                             # single-tail test, given our hypothesis has sign
+                             alternative = "greater") %>%
+                      tidy()
+                    ))
+
+# Print data on screen
+comp_list %>% unnest(t.test) %>%
+  rename(ci.lo = conf.low, ci.up = conf.high,
+    df = parameter, t = statistic, alt = alternative) %>%
+  select(-data, -method, -alt) %>%
+  group_by(Exp) %>%
+  # adjust for multiple comparisons
+  mutate(p.adj = p.adjust(p.value, method = "bonferroni"), .after = p.value) %>%
+  relocate(p.value, .after = last_col()) %>%
+  relocate(p.adj, .after = last_col())
+
+
+# Below there is the old version (without map)
 
 # Exp 1:
 stat_firstrev %>%
