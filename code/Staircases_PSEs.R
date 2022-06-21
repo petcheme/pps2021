@@ -205,9 +205,12 @@ stat_pse0 %$% cor.test(PSE.x, PSE.y)
 data_stair %>%
   group_by(Exp, Condition, BranchStart, Subject, Block) %>%
   summarise(maxTrial = max(Trial)) %>%
+  # average across blocks within each subject
   summarise(maxTrial = mean(maxTrial)) %>%
+  # average across subjects
   summarise(maxTrial = mean(maxTrial),
             n = n()) %>%
+  # average across condition (staircase type: dual or simple)
   summarise(maxTrial = mean(maxTrial))
 
 
