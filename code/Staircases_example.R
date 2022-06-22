@@ -21,11 +21,17 @@ default(read_csv) <- list(lazy = FALSE,
 # Parameters
 par <- list("exp" = 1,
         "subject" = "S06",
-      "max_trial" = 30)
+      "max_trial" = 30,
+  "simple_blocks" = c(1,2),
+    "dual_blocks" = c(1),
+          "trans" = "log10")
 
-# par <- list("exp" = 2,
-#         "subject" = "S56",
-#       "max_trial" = 26)
+par <- list("exp" = 2,
+        "subject" = "S56",
+      "max_trial" = 26,
+  "simple_blocks" = c(1,2),
+    "dual_blocks" = c(2),
+          "trans" = "identity")
 
 # Load data
 data_stair <- 
@@ -122,7 +128,7 @@ data_subject <- data_stair %>%
 
 # Simple staircases
 data_panel1.1 <- data_subject %>%
-  filter(Condition == "simple", Block == 1 | Block == 2)
+  filter(Condition == "simple", is.element(Block, par$simple_blocks))
 
 # some testing code
 # data_panel1.1 %>%
@@ -158,7 +164,7 @@ panel1.1
 
 # Dual staircases
 data_panel1.2 <- data_subject %>%
-  filter(Condition == "dual", Block == 2)
+  filter(Condition == "dual", is.element(Block, par$dual_blocks))
 
 panel1.2 <- data_panel1.2 %>%
   ggplot(aes(x=Trial, y=Distance, group = BranchStart)) +
