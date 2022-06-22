@@ -141,7 +141,7 @@ panel1.1 <- data_panel1.1 %>%
     geom_point(aes(color = Start, shape = (Reversal > 2))) +
     geom_line(aes(color = Start)) +
     # scale_color_manual(values = c("#F8766D", "#00BFC4")) +
-    scale_y_continuous(trans='log10') +
+    scale_y_continuous(trans=par$trans) +
     ylab("Target distance [cm]") +
   
     # PSEs (here I take the input data and branch the analysis)
@@ -170,7 +170,7 @@ panel1.2 <- data_panel1.2 %>%
   ggplot(aes(x=Trial, y=Distance, group = BranchStart)) +
     geom_point(aes(color = BranchStart)) +
     geom_line(aes(color = BranchStart)) +
-    scale_y_continuous(trans='log10') +
+    scale_y_continuous(trans=par$trans) +
     #scale_color_manual(values = c("#00BFC4", "#F8766D")) +
     ylab(NULL)  + 
   
@@ -198,7 +198,7 @@ panel1.2
 panel2.1 <- data_exp_simple %>%
   ggplot(aes(x=Trial, y=Dist_mean, group=Start)) +
   geom_point(aes(color = Start)) + geom_line(aes(color = Start)) +
-  scale_y_continuous(trans='log10') +
+  scale_y_continuous(trans=par$trans) +
   ylab("Target distance [cm]") +
   # average pse
   geom_hline(data = mean_pse %>%
@@ -215,7 +215,7 @@ panel2.1 <- data_exp_simple %>%
 panel2.2 <- data_exp_dual %>%
     ggplot(aes(x=Trial, y=Dist_mean, group = Branch)) +
     geom_point(aes(color = Branch)) + geom_line(aes(color = Branch)) +
-    scale_y_continuous(trans='log10') +
+    scale_y_continuous(trans=par$trans) +
     # average pse
     geom_hline(data = mean_pse %>%
                filter(Condition == "dual"),
