@@ -60,14 +60,11 @@ data_stair <-
 
 #### DATA MANIPULATION ####
 
-# Filter experiment
-data_exp <- data_stair %>%
-  filter(Exp == par$exp)
-
 # Average PSEs #
 
 # Individual averages
-mean_pse_indiv <- data_exp %>%
+mean_pse_indiv <- data_stair %>%
+  filter(Exp == par$exp) %>%
   group_by(Exp, Condition, BranchStart, Subject) %>%
   filter(Reversal > 2) %>% 
   #filter(Subject == "S01") %>%
@@ -86,7 +83,8 @@ mean_pse <- mean_pse_indiv %>%
 # Filter data by staircase type # 
 
 # Simple staircases
-data_exp_simple <- data_exp %>%
+data_exp_simple <- data_stair %>%
+  filter(Exp == par$exp, Condition == "simple") %>%
   filter(Condition == "simple") %>%
   group_by(Start, Trial) %>%
   summarise(Dist_mean = mean(Distance),
