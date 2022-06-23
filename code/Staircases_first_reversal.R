@@ -1,3 +1,8 @@
+# This script contains the analysis of Supp. Material S1. We first calculate 
+# the average number of trial for the first reversal, for each condition. Then
+# we analyzed if there was any influence due to the staircase type (dual vs
+# simple).
+
 # ---- Header ----
 
 # Load libraries
@@ -53,7 +58,7 @@ data_firstrev <- data_stair %>%
   filter(Reversal == par.n_reversal) %>%
   select(-Start, -Response, -StairId, -RT, -Distance, -OutlierDist, -OutlierSubj, -Reversal)
 
-# Individual averages
+# Individual averages (for each staircase condition)
 stat_firstrev <- data_firstrev %>%  
   group_by(Exp, CondBranch, Condition, BranchStart, Subject) %>%
   summarise(Trial_mean = mean(Trial),
@@ -80,6 +85,7 @@ mean_firstrev <- stat_firstrev %>%
   mutate(low = m - t_crit*sem,
          upp = m + t_crit*sem)
 
+# Display table with mean values and other stats
 mean_firstrev %>% ungroup() %>%
   select(-BranchStart, -Condition) %>%
   arrange(Exp, desc(CondBranch))
