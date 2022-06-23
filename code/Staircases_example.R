@@ -65,27 +65,35 @@ data_stair <-
 # Individual averages
 mean_pse_indiv <- data_stair %>%
   filter(Exp == par$exp) %>%
-  group_by(Exp, Condition, BranchStart, Subject) %>%
+  group_by(Exp, Condition, BranchStart, Subject, Block) %>%
   filter(Reversal > 2) %>% 
+  filter(!OutlierSubj, !OutlierDist) %>%
   #filter(Subject == "S01") %>%
-  summarise(Dist_mean = mean(Distance),
-            Dist_sd   =   sd(Distance),
+  
+  # average across reversals within each subject, condition, branch start, and block
+  summarise(Dist_mean0 = mean(Distance),
+            Dist_sd    =   sd(Distance),
             n = n()) %>%
+  # average across condition and branch start within each subject
+  summarise(Dist_mean = mean(Dist_mean0),
+            Dist_sd   =   sd(Dist_mean0),
+            n = n()) %>%
+  
   relocate(Subject) %>%
   arrange(Subject)
 
 # Between-subjects average
 mean_pse <- mean_pse_indiv %>%
   group_by(Exp, Condition, BranchStart) %>%
-  summarise(Dist_mean = mean(Dist_mean),
-            n = n())
+  summarise(m  = mean(Dist_mean),
+            sd =   sd(Dist_mean),
+            n  =    n())
 
 # Filter data by staircase type # 
 
 # Simple staircases
 data_exp_simple <- data_stair %>%
   filter(Exp == par$exp, Condition == "simple") %>%
-  filter(Condition == "simple") %>%
   group_by(Start, Trial) %>%
   summarise(Dist_mean = mean(Distance),
             Dist_sd   =   sd(Distance),
