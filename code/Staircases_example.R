@@ -18,20 +18,31 @@ default(read_csv) <- list(lazy = FALSE,
                 show_col_types = FALSE,
                        comment = "#")
 
+# Some display configuration
+options(pillar.sigfig = 4)
+
 # Parameters
 par <- list("exp" = 1,
         "subject" = "S06",
       "max_trial" = 30,
   "simple_blocks" = c(1,2),
     "dual_blocks" = c(1),
-          "trans" = "log10")
+          "trans" = "log10",
+        # data from script "Staircases_first_reversal.R"
+        "mean_fr" = tibble(Condition   = c("simple", "simple", "dual", "dual"),
+                           BranchStart = c("near", "far", "near", "far"),
+                           Trial_mean  = c(10.1, 7.17, 10.5, 8.17)))
 
 par <- list("exp" = 2,
         "subject" = "S56",
       "max_trial" = 26,
   "simple_blocks" = c(1,2),
     "dual_blocks" = c(2),
-          "trans" = "identity")
+          "trans" = "identity",
+        # data from script "Staircases_first_reversal.R"
+        "mean_fr" = tibble(Condition   = c("simple", "simple", "dual", "dual"),
+                           BranchStart = c("near", "far", "near", "far"),
+                           Trial_mean  = c(5.91, 5.5, 6.61, 6.35)))
 
 # Load data
 data_stair <- 
@@ -70,24 +81,6 @@ mean_pse_indiv <- data_exp %>%
 mean_pse <- mean_pse_indiv %>%
   group_by(Exp, Condition, BranchStart) %>%
   summarise(Dist_mean = mean(Dist_mean),
-            n = n())
-
-# Average trial of the first reversal #
-
-# Individual averages
-mean_fr_indiv <- data_exp %>%
-  group_by(Exp, Condition, BranchStart, Subject) %>%
-  filter(Reversal == 1) %>% 
-  summarise(Trial_mean = mean(Trial),
-            Trial_sd   =   sd(Trial),
-            n = n()) %>%
-  relocate(Subject) %>%
-  arrange(Subject)
-
-# Between-subjects average
-mean_fr <- mean_fr_indiv %>%
-  group_by(Exp, Condition, BranchStart) %>%
-  summarise(Trial_mean = mean(Trial_mean),
             n = n())
 
 # Filter data by staircase type # 
@@ -206,7 +199,7 @@ panel2.1 <- data_exp_simple %>%
              aes(yintercept = Dist_mean, color = BranchStart),
              linetype = "dashed") +
   # average first reversal
-  geom_vline(data = mean_fr %>%
+  geom_vline(data = par$mean_fr %>%
                filter(Condition == "simple"),
              aes(xintercept = Trial_mean, color = BranchStart),
              linetype = "dashed")
@@ -222,7 +215,7 @@ panel2.2 <- data_exp_dual %>%
              aes(yintercept = Dist_mean, color = BranchStart),
              linetype = "dashed") +
     # average first reversal
-    geom_vline(data = mean_fr %>%
+    geom_vline(data = par$mean_fr %>%
                filter(Condition == "dual"),
                aes(xintercept = Trial_mean, color = BranchStart),
                linetype = "dashed") +
@@ -235,8 +228,8 @@ panel3.1 <- data_exp_simple %>%
   ggplot(aes(x=Trial, y=RTlog_mean, group=Start)) +
   geom_point(aes(color = Start)) + geom_line(aes(color = Start)) +
   ylab("Response time [s]") +
-  geom_vline(data = mean_fr %>%
-             filter(Condition == "simple"), 
+  geom_vline(data = par$mean_fr %>%
+             filter(Condition == "simple"),
              aes(xintercept = Trial_mean, color = BranchStart),
              linetype = "dashed") +
   scale_y_continuous(breaks = log10(seq(.7, 1.6, by = 0.1)),
@@ -247,8 +240,8 @@ panel3.1 <- data_exp_simple %>%
 panel3.2 <- data_exp_dual %>%
   ggplot(aes(x=Trial, y=RTlog_mean, group=Branch)) +
   geom_point(aes(color = Branch)) + geom_line(aes(color = Branch)) +
-  geom_vline(data = mean_fr %>%
-             filter(Condition == "dual"), 
+  geom_vline(data = par$mean_fr %>%
+             filter(Condition == "dual"),
              aes(xintercept = Trial_mean, color = BranchStart),
              linetype = "dashed") +
   scale_y_continuous(breaks = log10(seq(.7, 1.6, by = 0.1)),
