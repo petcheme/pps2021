@@ -221,8 +221,11 @@ comp_list %<>%
 # calculate effect sizes
 comp_list %<>%
   # obtain s.d. of differences
-  mutate(sd_diff = estimate / t*sqrt(df+1), .before = "t") %>%
-  mutate(d_z = estimate / sd_diff, .before = "t")
+  mutate(sd_diff = estimate / t*sqrt(df+1), .before = t) %>% 
+  # cohen's d_z
+  mutate(d_z = estimate / sd_diff, .before = t) %>%
+  # common language effect size (> 0.5)
+  mutate(cles = .5 + abs(pnorm(d_z) - .5), .before = t)
 
 # print table with all the stats
 comp_list %>% rename(FiltOut = FilterOutliers) %>% print(n=100)
