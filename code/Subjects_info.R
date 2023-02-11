@@ -93,7 +93,10 @@ data_demographics %>%
 
 # load data
 data_reach <- read_csv(here("data", "data_subjects.csv")) %>%
+  # S13 has a significantly smaller value
   # filter(Subject != "S13") %>%
+  # Filter excluded subjects
+  filter(!(Subject %in% (data_demographics_excluded %$% Subject))) %>%
   mutate(Experiment = factor(Experiment)) %>%
   rename(Exp = Experiment) %>%
   group_by(Exp)
@@ -103,7 +106,8 @@ stats_reach <- data_reach %>%
   summarise(Reach_mean = mean(Reach),
             Reach_sd   = sd(Reach),
             Reach_min  = min(Reach),
-            Reach_max  = max(Reach))
+            Reach_max  = max(Reach),
+            n = n())
   
 # t-test
 reach.t.test <- data_reach %>% 
