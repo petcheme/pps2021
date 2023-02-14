@@ -43,8 +43,6 @@ data_psy.summ <- data_psy %>%
 
 skim(data_psy.summ)
 
-# Outliers ####
-
 # Psychometric curve fitting ####
 
 # One psychometric curve to all the data (global fit)
@@ -60,12 +58,14 @@ fit.global <- quickpsy(data_psy.summ, Distance, n_Reach, n,
 
 fit.subject <- quickpsy(data_psy.summ, Distance, n_Reach, n, 
                         grouping = .(Experiment, Subject), 
-                        bootstrap = FALSE, log = TRUE, fun = logistic_fun) 
+                        B = 100, #Just for saving, comment otherwise
+                        # bootstrap = "none", #Uncomment if you are not interested on calculating the CIs
+                        log = TRUE, fun = logistic_fun) 
 
 # Now I save the individual PSEs
 indivPSEs <- fit.subject$thresholds %>%
   select(-prob) %>% 
-  mutate(Experiment = as.numeric(str_sub("exp1",-1)),
+  mutate(Experiment = as.numeric(str_sub(Experiment,-1)),
          n = 1,
          Condition = "psy_curve") %>%
   rename(Exp = Experiment, 
@@ -163,7 +163,7 @@ fig1a <- ggplot(data = thresholds.df, aes(x = thre, y = prob)) +
                                                                   fit.global$thresholds$thre,
                                                                   fit.global$thresholds$threinf,
                                                                   fit.global$thresholds$thresup)),
-                  size=3, nudge_y=-0.1, nudge_x=40, direction="y", angle=0, vjust=1, segment.size = .5,
+                  size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5,
                   segment.colour = "grey") +
   stat_summary(data = fit.global$averages, aes(x = Distance, y = prob), 
                size = 0.5, width=4, colour="grey", alpha = .7, fun.data = "mean_se", geom="errorbar") +
@@ -185,9 +185,9 @@ fig1b <- ggplot(data_psy.summ, aes(x = Distance, y = m_RTLog)) +
   stat_summary(size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
   geom_line(data = predicted.LogRT, aes(x = exp(xfit), y = curve)) +
   geom_vline(data = fit_pars.logRT, aes(xintercept=exp(mu)), linetype = "dashed", color="grey") + 
-  geom_text_repel(data = fit_pars.logRT, aes(x = exp(mu), y = -.4, 
-                                             label=sprintf("PSE=%.1f", exp(mu))),
-                                             size=3, nudge_y=0, nudge_x=-40, direction="y", angle=0, vjust=1, segment.size = .5, 
+  geom_text_repel(data = fit_pars.logRT, aes(x = exp(mu), y = -.25, 
+                                             label=paste0(sprintf("PSE=%.1f", exp(mu)), " cm")),
+                                             size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5, 
                                              segment.colour = "grey") +
   coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
   facet_grid(.~Experiment) +
@@ -200,13 +200,15 @@ fig1b <- ggplot(data_psy.summ, aes(x = Distance, y = m_RTLog)) +
 
 fig1b
 
-fig1 <- fig1a / fig1b + plot_layout(heights = c(1, .7))
+fig1 <- fig1a / fig1b + 
+  plot_layout(heights = c(1, .7)) +
+  plot_annotation(tag_levels = 'a')
 fig1
 
-scale <- 1.5
+scale <- 1
 ggsave(here("figures", "fig_1.png"), width = scale * 18, height = scale * 12, units = "cm")
 
-# Prueba GLMM ####
+ # Prueba GLMM ####
 # pacman::p_load(lme4, car)
 # 
 # data_psy_1 <- here("data", "data_exp1_psycurve.csv") %>%
