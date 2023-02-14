@@ -83,7 +83,8 @@ reach.df <- here("data", "data_subjects.csv") %>%
   select(all_of(c("Experiment", "Subject", "Reach"))) %>%
   filter(!(Subject %in% c("S15", "S64"))) %>%
   mutate(Reach = Reach + 20,
-         Experiment = factor(Experiment))
+         Experiment = factor(if_else(Experiment==1, "exp1", "exp2")),
+         Subject = factor(Subject))
 
 reach.df %>% group_by(Experiment) %>%
   summarise(mean_Reach = mean(Reach)) %$% mean_Reach
@@ -156,6 +157,7 @@ experiment_names <- c(
 pos <- position_jitter(height = 0.05, seed = 1)
 
 fig_psychoCurve <- function(Exp_i) {
+  # Exp_i is a string containing the experiment ID ("exp1" or "exp2")
   thresholds.df %>% filter(Experiment == Exp_i) %>%
     ggplot(aes(x = thre, y = prob)) + 
     geom_point(colour="black", fill="grey", alpha = .7, pch=21, size=2.5) + 
@@ -186,14 +188,15 @@ fig_psychoCurve <- function(Exp_i) {
           strip.text = element_text(size=12)) 
 }
 fig_psychoRT <- function(Exp_i) {
+  # Exp_i is a string containing the experiment ID ("exp1" or "exp2")
   data_psy.summ %>% filter(Experiment == Exp_i) %>%
     group_by(Distance) %>%
-    summarise(m_RTLog = mean(m_RTLog),
-              SE_RTLog = sd(m_RTLog)/sqrt(n)) %>%
-    ggplot(aes(x = Distance, y = m_RTLog)) +
-    geom_errorbar(aes(ymin = m_RTLog - SE_RTLog, ymax = m_RTLog + SE_RTLog),
-                  size = 0.5, colour="grey", alpha = .7) +
+    summarise(SE_RTLog = sd(m_RTLog)/sqrt(n()),
+              M_RTLog = mean(m_RTLog)) %>%
+    ggplot(aes(x = Distance, y = M_RTLog)) +
     geom_point(size = 2.5, colour="grey", alpha = 1) +
+    geom_errorbar(aes(ymin = M_RTLog - SE_RTLog, ymax = M_RTLog + SE_RTLog),
+                  size = 0.5, colour="grey", width = 4, alpha = .7) +
     geom_line(data = predicted.LogRT %>% filter(Experiment == Exp_i), aes(x = exp(xfit), y = curve)) +
     geom_vline(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(xintercept=exp(mu)), linetype = "dashed", color="grey") + 
     geom_text_repel(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(x = exp(mu), y = -.25, 
@@ -223,5 +226,6 @@ fig1 <- (fig1a | fig1b) / (fig1c | fig1d) +
   plot_annotation(tag_levels = 'a')
 fig1
 
-scale <- 1
+scale <- 1.2
 ggsave(here("figures", "fig_1.png"), width = scale * 18, height = scale * 12, units = "cm")
+ 
