@@ -1,15 +1,21 @@
-library(here)
-library(magrittr)
-library(purrr)
-library(tidyverse)
-
-library(ggplot2)
-
 # Note: This script is a full tidyverse version of the previous one
 
+#### HEADER ####
+
+# Load libraries
+pacman::p_load(default,      # redefine default parameters
+               here,         # path management
+               magrittr,     # pipes support
+               tidyverse)
 
 # Clear workspace
 rm(list = ls())
+
+# Some default values
+default(read_csv) <- list(lazy = FALSE, # prevent file locking in Windows
+                      progress = FALSE, # \_ silent output
+                show_col_types = FALSE, # /
+                       comment = "#")
 
 # Some user-defined functions
 lower_iqr <- function(col) {
@@ -31,10 +37,10 @@ par.files = c("data_exp1_psycurve.csv",
               "data_exp2_staircases.csv")
 
 # which columns define groups, depending on the dataset (see below)
-par.columns <- c("Subject", "Distance", "Condition", "Start")
+par.columns <- c("Subject", "Distance", "Method")
 
 
-# --- Analysis ---
+#### DATA PROCESSING ####
 
 # Start by building the file index
 files_index <- 
@@ -47,10 +53,21 @@ files_index %<>%
 
 # Load each file (dataset) into a nested tibble
 my_data <- files_index %>%
-  mutate( map(files_index$fullpath, ~read_csv(file = ., show_col_types = FALSE, # \_ first and second flags = silent output
-                                                        progress = FALSE,       # /  third flag prevents file locking in Windows
-                                                        lazy     = FALSE)) %>% 
+  mutate( map(files_index$fullpath, ~read_csv(file = .)) %>% 
             tibble(data = .))
+
+# Create Method column with values: "psy-curve", simple-near", "simple-far", and "dual"
+my_data %<>%
+  mutate(data = map_if(data, 
+                       Method == "staircases",
+                       .f = ~ .x %>% 
+                         mutate(Method = if_else(Condition == "dual",
+                                                 Condition, 
+                                          paste0(Condition, "-", Start)),
+                                .before = 2),
+                       .else = ~ .x %>% mutate(Method = "psy-curve",
+                                               .before = 2)
+                       ))
 
 # Obtain group columns for each dataset -maybe this can be made simpler
 my_data %<>% 
@@ -72,13 +89,15 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
 my_data %<>% mutate(data = map( data, ~ .x %>% 
                                   # group across all condition columns
                                   group_by(across(all_of(group.cols %>% unlist))) %>%
-                                  # obtain IQ range
-                                  mutate(low.s.d = lower_iqr(logRT),
-                                         upp.s.d = upper_iqr(logRT)) %>%
+                                  # obtain IQ range (excluding first trial of psy-curve)
+                                  mutate(low.s.d = lower_iqr(logRT[ Trial != 1 | Method != "psy-curve" ]),
+                                         upp.s.d = upper_iqr(logRT[ Trial != 1 | Method != "psy-curve" ])) %>%
+                                  # how many points in each group (debug only)
+                                  #mutate(n = sum(Trial != 1 | Method != "psy-curve")) %>%
                                   mutate(OutlierDist = logRT < low.s.d |
                                                        logRT > upp.s.d) %>%
-                                  # NA data is not considered outlier
-                                  mutate(OutlierDist = ifelse(is.na(OutlierDist), FALSE, OutlierDist)) %>%
+                                  # NA data is not considered outlier, same for first trial in psy-curve
+                                  mutate(OutlierDist = ifelse(is.na(OutlierDist) | (Trial == 1 & Method == "psy-curve"), FALSE, OutlierDist)) %>%
                                   select(-low.s.d, -upp.s.d)
                                   ))
 
@@ -86,19 +105,21 @@ my_data %<>% mutate(data = map( data, ~ .x %>%
 my_data %<>% mutate(data = map( data, ~ .x %>% 
                                   # group across all condition columns except Distance
                                   group_by(across(all_of(setdiff(group.cols %>% unlist, "Distance")))) %>%
-                                  # obtain IQ range
-                                  mutate(low.s = lower_iqr(logRT),
-                                         upp.s = upper_iqr(logRT)) %>%
+                                  # obtain IQ range (excluding first trial of psy-curve)
+                                  mutate(low.s = lower_iqr(logRT[ Trial != 1 | Method != "psy-curve" ]),
+                                         upp.s = upper_iqr(logRT[ Trial != 1 | Method != "psy-curve" ])) %>%
+                                  # how many points in each group (debug only)
+                                  #mutate(n = sum(Trial != 1 | Method != "psy-curve")) %>%
                                   mutate(OutlierSubj = logRT < low.s |
                                                        logRT > upp.s) %>%
-                                  # NA data is not considered outlier
-                                  mutate(OutlierSubj = ifelse(is.na(OutlierSubj), FALSE, OutlierSubj)) %>%
+                                  # NA data is not considered outlier, same for first trial in psy-curve
+                                  mutate(OutlierSubj = ifelse(is.na(OutlierSubj) | (Trial == 1 & Method == "psy-curve"), FALSE, OutlierSubj)) %>%
                                   select(-low.s, -upp.s)
                                   ))
 
-# Remove column logRT
-my_data %<>% mutate(data = map( data, ~ .x %>% 
-                                  select(-logRT) 
+# Remove columns Method and logRT
+my_data %<>% mutate(data = map( data, ~ .x %>% ungroup() %>%
+                                  select(-any_of( c("logRT", "Method") )) 
                                   ))
 
 # Just need to save results

@@ -102,21 +102,21 @@ We analyzed staircase data to handle reversals out of range. We established new 
 Presently, ten blocks were excluded (check the corresponding script, Staircases_range.R):
 
 > subjects_out_of_range %>% ungroup() %>% filter (DiscardBlock) %>% select(-StairId) %>% distinct(Subject, Condition, Block)
-# A tibble: 10 x 3
-   Subject Condition Block
-   <chr>   <chr>     <dbl>
- 1 S01     simple        1
- 2 S07     dual          2
- 3 S07     dual          1
- 4 S59     simple        2
- 5 S62     dual          2
- 6 S65     simple        1
- 7 S70     dual          2
- 8 S70     simple        1
- 9 S70     simple        3
-10 S73     simple        1
+# A tibble: 10 x 4
+   Subject Condition Start Block
+   <chr>   <chr>     <chr> <dbl>
+ 1 S01     simple    near      1
+ 2 S07     dual      far       2
+ 3 S07     dual      near      1
+ 4 S59     simple    far       2
+ 5 S62     dual      near      2
+ 6 S65     simple    far       1
+ 7 S70     dual      far       2
+ 8 S70     simple    far       1
+ 9 S70     simple    far       3
+10 S73     simple    near      1
 
 The data was moved to data/discarded.
 
-No subject was excluded yet based on issues with the data. The only exclusions occured during data collection, due to technical problems with the setup (S15 and S64).
+No subject was excluded yet based on issues with the data. The only exclusions occurred during data collection, due to technical problems with the setup (S15 and S64).
 

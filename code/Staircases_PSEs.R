@@ -1,5 +1,8 @@
+# ---- Header ----
+
 # Load libraries
-pacman::p_load(here, 
+pacman::p_load(default,
+               here, 
                ggplot2, 
                magrittr, 
                tidyverse)
@@ -7,16 +10,22 @@ pacman::p_load(here,
 # Clear workspace
 rm(list = ls())
 
+# Some default values
+default(read_csv) <- list(lazy = FALSE,
+                      progress = FALSE,
+                show_col_types = FALSE,
+                       comment = "#")
+
 # Analysis parameters
 par.first_n_reversals_discarded <- 2
 par.alpha <- 0.05
 
 # Load data
 data_stair <- here("data", "data_exp1_staircases.csv") %>%
-  read_csv(lazy = FALSE) %>%
+  read_csv() %>%
   mutate(Exp = "1") %>%
   rbind(here("data", "data_exp2_staircases.csv") %>%
-          read_csv(lazy = FALSE) %>%
+          read_csv() %>%
           mutate(Exp = "2")) %>%
   mutate(Exp     = factor(Exp),
          Subject = factor(Subject)) %>%
@@ -24,61 +33,86 @@ data_stair <- here("data", "data_exp1_staircases.csv") %>%
   mutate(StairId = factor(StairId))
 
 
-# --- Some information about the dataset ---
+# ---- Some information about the dataset ----
 
 # How many subjects: 48
 info_subjects <- data_stair %>% ungroup() %>% distinct(Exp, Subject)
 
 # Each subject provided six blocks (dual blocks had two staircases each,
 # hence each subject performed eight staircases)
-info_blocks <- data_stair %>% ungroup() %>% distinct(Condition, Block)
+info_blocks <- data_stair %>% ungroup() %>% distinct(Condition, Block) %>%
+  arrange(Condition, Block)
 
-# Conditions performed by each subject (48 subjects x 4 combinations of conditions = 192 rows)
+# Conditions performed by each subject (48 subjects x 4 combinations of
+# conditions, minus 5 rows excluded due to reversals out of range = 187 rows)
 info_conds_subjects <- data_stair %>%
-  ungroup() %>%
   group_by(Subject, Condition, Block, Start) %>% 
-  summarise(n = n(), .groups = "keep") %>%
+  summarise(n = n(), .groups = "drop") %>%
   group_by(Subject, Condition, Start) %>%
-  summarise(n= n())
+  summarise(n= n(), .groups = "drop_last")
 
-info_conds_subjects2 <- info_conds_subjects %>%
+# Summary of blocks performed by each subject
+info_conds_subjects_summary <- info_conds_subjects %>%
   group_by(Subject) %>%
   summarise(n = sum(n))
 
+# 278 blocks completed (48 subjects x 6 blocks, minus 10 excluded blocks due to
+# reversals out of range)
+info_conds_subjects_summary %$% sum(n)
+
+
 # There were four conditions (in the table, Condition means Staircase Type)
 # Simple staircases had 4 repetitions, dual had 2
-info_conds <- info_conds_subjects %>% ungroup() %>% 
+info_conds <- info_conds_subjects %>%
   group_by(Condition, Start, n) %>% 
   distinct(Condition, Start, n)
 
+# Some conditions had some data excluded, hence some cases appear duplicated 
+# with a lower n...
+info_conds %>% arrange(Condition, Start, n)
 
-# --- Here starts data extraction ---
+# ...the experimental design was this:
+info_conds %>% group_by(Condition, Start) %>% summarize(n = max(n), .groups = "keep")
+
+
+# ---- Here starts data extraction ----
 
 # Grouping at the lowest level -includes StairId for dual staircases
 data_stair %<>% group_by(Exp, Subject, Condition, Block, Start, StairId)
 
-# How many groups: 376 (48 subjects x 8 staircases)
-data_stair %>% summarise(n=n())
+# How many groups: 370 (48 subjects x 8 staircases each - 14 staircases excluded)
+data_stair %>% summarise(n=n(), .groups = "drop_last")
 
-# Filter reversals. There are 4509 reversals: 376 blocks x 12 reversals each,
+# Filter reversals. There are 4437 reversals: 370 staircases x 12 reversals each,
 # minus three reversals lost in the way)
 data_reversals <- data_stair %>% filter(Reversal > 0) 
 
-# Mean reversal for each Subject and Block
+# Lost reversals: S01 and S66
+data_reversals %>%
+  # ignore first n reversals (see below)
+  filter(Reversal > par.first_n_reversals_discarded) %>%
+  summarise(n = n(), .groups = "drop_last") %>%
+  filter (n != 10)
+
+# Mean reversal (i.e. single PSE) for each Subject and Block
 stat_reversals <- data_reversals %>%
+  group_by(BranchStart, .add = TRUE) %>%
   # filter first n reversals as they must be discarded for PSE calculation
   filter(Reversal > par.first_n_reversals_discarded) %>%
+  # filter reversals with outlying RTs  
+  filter(!(OutlierDist | OutlierSubj)) %>%
+  # finally obtain mean, sd, etc.
   summarise(mean = mean(Distance),
               sd = sd(Distance),
                n = n(), .groups = "keep")
 
-# Lost reversals: S01 and S66
-stat_reversals %>% filter (n != 11)
+# Lost + discarded reversals
+stat_reversals %>% filter (n != 10)
 
 # Collapse dual-near and dual-far into a single condition: dual
 # (Should check that there are not significant differences)
 stat_reversals %<>%
-  mutate(ConditionFull = ifelse(Condition == "dual",
+  mutate(ConditionFull = if_else(Condition == "dual",
                                 Condition,
                                 paste(Condition, Start, sep = '-')))
 
@@ -87,7 +121,7 @@ stat_pse <- stat_reversals %>%
   group_by(Exp, Subject, ConditionFull) %>% 
   summarise(PSE = mean(mean), 
              sd = sd(mean),
-              n = n()) %>%
+              n = n(), .groups = "drop_last") %>%
   rename(Condition = ConditionFull)
 
 # Obtain mean PSEs (averaged between subjects)
@@ -99,12 +133,15 @@ mean_pse <- stat_pse %>%
               n = n(), .groups = "keep") %>%
   # sem and confidence intervals
   mutate(sem = sd / sqrt(n),
-         low = m - qt(1-par.alpha/2, n-1)*sem,
-         upp = m + qt(1-par.alpha/2, n-1)*sem)
+      t_crit = qt(1-par.alpha/2, n-1),
+         low = m - t_crit*sem,
+         upp = m + t_crit*sem)
             
 # Extract data to CSV
 stat_pse %>% write_csv(here("data", "data_PSE_staircases.csv"))
 
+
+# ---- Some plots ----
 
 # Plot for each experiment (individual + average)
 ggplot(data = stat_pse) +
@@ -117,5 +154,108 @@ ggplot(data = stat_pse) +
              aes(x = Condition, y = m), color = "red", size=4, alpha=0.5)
 
 
+# Quick and dirty plot of the effect of removing outlying reversals. Repeat
+# the calculation of the PSEs without filtering RT outliers, then join with
+# the PSEs that already were calculated.
+
+# Single PSEs
+stat_reversals0 <- data_stair %>% 
+  filter(Reversal > 0) %>%
+  # discard reversals before step halving
+  filter(Reversal > par.first_n_reversals_discarded) %>%
+  # obtain mean, sd, etc.
+  summarise(mean = mean(Distance),
+            sd = sd(Distance),
+            n = n(), .groups = "keep") %>%
+  # full condition column
+  mutate(ConditionFull = if_else(Condition == "dual",
+                                 Condition,
+                                 paste(Condition, Start, sep = '-')))
+
+# Average PSEs for simple-near, simple-far, and dual
+stat_pse0 <- stat_reversals0 %>% 
+  group_by(Exp, Subject, ConditionFull) %>% 
+  summarise(PSE = mean(mean), 
+            sd = sd(mean),
+            n = n(), .groups = "drop_last") %>%
+  rename(Condition = ConditionFull)
+
+stat_pse0 <- 
+  inner_join(stat_pse0, stat_pse, by = c("Exp", "Subject", "Condition"))
+
+# plot
+stat_pse0 %>% ggplot(aes(x = PSE.x, y = PSE.y)) +
+  geom_point(aes(color = Condition)) +
+  # identity
+  geom_abline(slope=1,intercept=0, linetype= "dashed") +
+  # +/- 10% lines
+  geom_abline(slope=1.05,intercept=0, linetype= "dashed", color = "darkgrey") +
+  geom_abline(slope=0.95,intercept=0, linetype= "dashed", color = "darkgrey") +
+  # +/- 10% lines
+  geom_abline(slope=1.1,intercept=0, linetype= "dashed", color = "darkgrey") +
+  geom_abline(slope=0.9,intercept=0, linetype= "dashed", color = "darkgrey")
+  
+# correlation
+stat_pse0 %$% cor.test(PSE.x, PSE.y)
 
 
+# ---- Some more analysis ----
+
+# Max average trial (i.e. average duration measured in trials)
+data_stair %>%
+  group_by(Exp, Condition, BranchStart, Subject, Block) %>%
+  summarise(maxTrial = max(Trial)) %>%
+  # average across blocks within each subject
+  summarise(maxTrial = mean(maxTrial)) %>%
+  # average across subjects
+  summarise(maxTrial = mean(maxTrial),
+            n = n()) %>%
+  # average across condition (staircase type: dual or simple)
+  summarise(maxTrial = mean(maxTrial))
+
+
+# Obtain PSEs for each condition and branch
+mean_pse_branches <- stat_reversals %>% 
+  mutate(CondBranch = paste0(Condition, "-", BranchStart)) %>%
+  group_by(Exp, CondBranch, Subject) %>% 
+  summarise(PSE = mean(mean), 
+            sd = sd(mean),
+            n = n(), .groups = "drop_last") %>%
+  rename(Condition = CondBranch) %>%
+  summarise( m = mean(PSE),
+            sd = sd(PSE),
+             n = n()) %>%
+  # standard error and t critical value
+  mutate(sem = sd / sqrt(n),
+      t_crit = qt(1-par.alpha/2, n-1),
+         low = m - t_crit*sem,
+         upp = m + t_crit*sem)
+
+# Display average PSE
+options(pillar.sigfig = 4) # set significant digits displayed in tibbles
+
+# branches
+mean_pse_branches %>%
+  arrange(Exp, desc(Condition))
+
+# dual collapsed
+mean_pse %>%
+  arrange(Exp, desc(Condition))
+
+
+
+
+# Comparison between branches (dual)
+stat_reversals %>%
+  filter(Exp == 1) %>%
+  ungroup() %>%
+  mutate(CondBranch = paste0(Condition, "-", BranchStart),
+         .after = Subject) %>%
+  select(-Exp, -Condition,-Block,-Start,-StairId,-BranchStart,-ConditionFull) %>%
+  group_by(CondBranch, Subject) %>%
+  summarise(mean = mean(mean),
+            n=n()) %>%
+  {inner_join(dplyr::filter(. ,CondBranch == "dual-near"),
+              dplyr::filter(., CondBranch == "dual-far"),
+              by = "Subject")} %$%
+  t.test(mean.x, mean.y, paired = TRUE)
