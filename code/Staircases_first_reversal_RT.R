@@ -121,7 +121,9 @@ comp_list <- stat_firstrev_rt %>%
   group_by(Exp, CondBranch) %>%
   select(-BranchStart) %>%
   nest(data = c(Subject, diff, n)) %>%
-  mutate(t.test = map(data, function (x) t.test(x$diff) %>% broom::tidy())) %>%
+  mutate(t.test = map(data, function (x)
+                        t.test(x$diff, alternative = "greater") %>%
+                        broom::tidy())) %>%
   select(-data)
 
 comp_list %>%
