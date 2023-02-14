@@ -23,7 +23,8 @@ data_psy <- here("data", "data_exp1_psycurve.csv") %>%
   mutate(Experiment = factor(Experiment),
          Subject = factor(Subject),
          RTLog = log(RT),
-         DistanceLog = log(Distance))
+         DistanceLog = log(Distance)) %>%
+  filter(!OutlierDist | !OutlierSubj)
 
 skim(data_psy)
 ## Summarize responses and response times accros subject and distances ####
@@ -77,12 +78,15 @@ indivPSEs <- fit.subject$thresholds %>%
 indivPSEs %>% write_csv(here("./data/data_PSE_psy_curve.csv"))
 
 # Load reaching distance data
-reach.df <- here("data", "data_exp1_subjects.csv") %>%
+reach.df <- here("data", "data_subjects.csv") %>%
   read_csv() %>% 
-  mutate(Experiment = 'exp1') %>%
-  rbind(here("data", "data_exp2_subjects.csv") %>%
-          read_csv() %>%
-          mutate(Experiment = 'exp2')) 
+  select(all_of(c("Experiment", "Subject", "Reach"))) %>%
+  filter(!(Subject %in% c("S15", "S64"))) %>%
+  mutate(Reach = Reach + 20,
+         Experiment = factor(Experiment))
+
+reach.df %>% group_by(Experiment) %>%
+  summarise(mean_Reach = mean(Reach)) %$% mean_Reach
 
 # ---
 # NACHO2021 - Acá estaba lo de sacar el S01 y el S07 que deberíamos ver por qué lo hacíamos
@@ -149,100 +153,75 @@ experiment_names <- c(
   `exp1` = "Experiment 1",
   `exp2` = "Experiment 2"
 )
-
 pos <- position_jitter(height = 0.05, seed = 1)
-fig1a <- ggplot(data = thresholds.df, aes(x = thre, y = prob)) + 
-  geom_point(colour="black", fill="grey", alpha = .7, pch=21, size=2.5) + 
-  geom_hline(yintercept=.5, linetype = "dashed", color="grey") + 
-  geom_vline(xintercept=fit.global$thresholds$thre, linetype = "dashed", color="grey") + 
-  geom_errorbarh(data = fit.global$thresholds, aes(xmax = thresup, xmin = threinf), height = .05, size = .5) +
-  geom_point(data = fit.global$thresholds, aes(x = thre, y = prob),
-             size = 2.5, stat="identity", color="black") +
-  geom_text_repel(data = fit.global$thresholds, aes(x = thre, y = prob/2, 
-                                                    label=sprintf("PSE=%.1f cm\nCI(%.1f %.1f)", 
-                                                                  fit.global$thresholds$thre,
-                                                                  fit.global$thresholds$threinf,
-                                                                  fit.global$thresholds$thresup)),
-                  size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5,
-                  segment.colour = "grey") +
-  stat_summary(data = fit.global$averages, aes(x = Distance, y = prob), 
-               size = 0.5, width=4, colour="grey", alpha = .7, fun.data = "mean_se", geom="errorbar") +
-  stat_summary(data = fit.global$averages, aes(x = Distance, y = prob), 
-               size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
-  geom_line(data = fit.global$curves, aes(x = x, y = y)) +
-  facet_grid(.~Experiment, labeller = as_labeller(experiment_names)) +
-  coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
-  ylab("No reach\nproportion") +
-  theme_pubr() +
-  theme(axis.title.x=element_blank(), 
-        axis.text = element_text(size=8), axis.title = element_text(size=10),
-        strip.background = element_blank(),
-        strip.text = element_text(size=12))
-fig1a
 
-fig1b <- ggplot(data_psy.summ, aes(x = Distance, y = m_RTLog)) +
-  stat_summary(size = 0.5, colour="grey", alpha = .7, fun.data = "mean_se", geom="errorbar") +
-  stat_summary(size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
-  geom_line(data = predicted.LogRT, aes(x = exp(xfit), y = curve)) +
-  geom_vline(data = fit_pars.logRT, aes(xintercept=exp(mu)), linetype = "dashed", color="grey") + 
-  geom_text_repel(data = fit_pars.logRT, aes(x = exp(mu), y = -.25, 
-                                             label=paste0(sprintf("PSE=%.1f", exp(mu)), " cm")),
-                                             size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5, 
-                                             segment.colour = "grey") +
-  coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
-  facet_grid(.~Experiment) +
-  xlab("Distance (cm)") + ylab("log(RT)\nlog(s)") +
-  theme_pubr() +
-  theme(axis.text = element_text(size=9), 
-        axis.title = element_text(size=10),
-        strip.background = element_blank(),
-        strip.text = element_blank())
+fig_psychoCurve <- function(Exp_i) {
+  thresholds.df %>% filter(Experiment == Exp_i) %>%
+    ggplot(aes(x = thre, y = prob)) + 
+    geom_point(colour="black", fill="grey", alpha = .7, pch=21, size=2.5) + 
+    geom_hline(yintercept=.5, linetype = "dashed", color="grey") + 
+    geom_vline(data = fit.global$thresholds %>% filter(Experiment == Exp_i), aes(xintercept = thre), linetype = "dashed", color="grey") + 
+    geom_errorbarh(data = fit.global$thresholds %>% filter(Experiment == Exp_i), aes(xmax = thresup, xmin = threinf), height = .05, size = .5) +
+    geom_point(data = fit.global$thresholds %>% filter(Experiment == Exp_i), aes(x = thre, y = prob),
+               size = 2.5, stat="identity", color="black") +
+    geom_text_repel(data = fit.global$thresholds %>% filter(Experiment == Exp_i), 
+                    aes(x = thre, y = prob/2, 
+                        label=sprintf("PSE=%.1f cm\nCI(%.1f %.1f)", 
+                                      fit.global$thresholds %>% filter(Experiment == Exp_i) %$% thre,
+                                      fit.global$thresholds %>% filter(Experiment == Exp_i) %$% threinf,
+                                      fit.global$thresholds %>% filter(Experiment == Exp_i) %$% thresup)),
+                    size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5,
+                    segment.colour = "grey") +
+    stat_summary(data = fit.global$averages %>% filter(Experiment == Exp_i), aes(x = Distance, y = prob), 
+                 size = 0.5, width=4, colour="grey", alpha = .7, fun.data = "mean_se", geom="errorbar") +
+    stat_summary(data = fit.global$averages %>% filter(Experiment == Exp_i), aes(x = Distance, y = prob), 
+                 size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
+    geom_line(data = fit.global$curves %>% filter(Experiment == Exp_i), aes(x = x, y = y)) +
+    coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
+    labs(y = "No reach\nproportion") +
+    theme_pubr() +
+    theme(axis.title.x=element_blank(), 
+          axis.text = element_text(size=8), axis.title = element_text(size=10),
+          strip.background = element_blank(),
+          strip.text = element_text(size=12)) 
+}
+fig_psychoRT <- function(Exp_i) {
+  data_psy.summ %>% filter(Experiment == Exp_i) %>%
+    group_by(Distance) %>%
+    summarise(m_RTLog = mean(m_RTLog),
+              SE_RTLog = sd(m_RTLog)/sqrt(n)) %>%
+    ggplot(aes(x = Distance, y = m_RTLog)) +
+    geom_errorbar(aes(ymin = m_RTLog - SE_RTLog, ymax = m_RTLog + SE_RTLog),
+                  size = 0.5, colour="grey", alpha = .7) +
+    geom_point(size = 2.5, colour="grey", alpha = 1) +
+    geom_line(data = predicted.LogRT %>% filter(Experiment == Exp_i), aes(x = exp(xfit), y = curve)) +
+    geom_vline(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(xintercept=exp(mu)), linetype = "dashed", color="grey") + 
+    geom_text_repel(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(x = exp(mu), y = -.25, 
+                                               label=paste0(sprintf("PSE=%.1f", exp(mu)), " cm")),
+                    size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5, 
+                    segment.colour = "grey") +
+    coord_trans(x="log10") + 
+    scale_y_continuous(limits = c(-0.5, 0.25)) +
+    scale_x_continuous(breaks=c(50, 100, 150)) +
+    labs(x = "Distance (cm)", 
+         y = "log(RT)\nlog(s)") +
+    theme_pubr() +
+    theme(axis.text = element_text(size=9), 
+          axis.title = element_text(size=10),
+          strip.background = element_blank(),
+          strip.text = element_blank())
+}
 
-fig1b
+fig1a <- fig_psychoCurve("exp1")
+fig1b <- fig_psychoCurve("exp2")
 
-fig1 <- fig1a / fig1b + 
+fig1c <- fig_psychoRT("exp1")
+fig1d <- fig_psychoRT("exp2")
+
+fig1 <- (fig1a | fig1b) / (fig1c | fig1d) + 
   plot_layout(heights = c(1, .7)) +
   plot_annotation(tag_levels = 'a')
 fig1
 
 scale <- 1
 ggsave(here("figures", "fig_1.png"), width = scale * 18, height = scale * 12, units = "cm")
-
- # Prueba GLMM ####
-# pacman::p_load(lme4, car)
-# 
-# data_psy_1 <- here("data", "data_exp1_psycurve.csv") %>%
-#   read_csv() %>%
-#   mutate(Subject = factor(Subject),
-#          RTLog = log(RT),
-#          DistanceLog = log(Distance))
-# 
-# data_psy_2 <- here("data", "data_exp2_psycurve.csv") %>%
-#   read_csv() %>%
-#   mutate(Subject = factor(Subject),
-#          RTLog = log(RT),
-#          DistanceLog = log(Distance))
-# 
-# m1 <- glmer(Response ~ DistanceLog + (1|Subject), 
-#             data = data_psy_1,
-#             family = binomial)
-# summary(m1)
-# 
-# m2 <- glmer(Response ~ DistanceLog + (1|Subject), 
-#             data = data_psy_2,
-#             family = binomial)
-# summary(m2)
-# 
-# mfull <- glmer(Response ~ DistanceLog * Experiment + (1|Subject), 
-#                data = data_psy,
-#                family = binomial)
-# summary(mfull)
-# 
-# logit(response) = log(response/(1-response)) = mx + b = caca
-# response = logistic(caca) = 1/(1+exp(-caca))
-# response = 1/(1+exp(-(mx+b)))
-# response = 1/(1+exp(-k(x-x0)))
-# response = 1/(1+exp(-m(x+b/m))) = 1/(1+exp(-m(x-(-b/m))))
-# 
-# k = m
-# x0 = -b/m
