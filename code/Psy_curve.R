@@ -179,9 +179,10 @@ fig_psychoCurve <- function(Exp_i) {
     stat_summary(data = fit.global$averages %>% filter(Experiment == Exp_i), aes(x = Distance, y = prob), 
                  size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
     geom_line(data = fit.global$curves %>% filter(Experiment == Exp_i), aes(x = x, y = y)) +
-    coord_trans(x="log10") + scale_x_continuous(breaks=c(50, 100, 150)) +
-    labs(y = "No reach\nproportion") +
-    theme_pubr() +
+    scale_x_continuous(limits = c(38, 222), breaks = c(50, 100, 150, 200)) +
+    coord_trans(x="log10") +
+    labs(y = "No reach proportion") +
+    theme_bw() +
     theme(axis.title.x=element_blank(), 
           axis.text = element_text(size=8), axis.title = element_text(size=10),
           strip.background = element_blank(),
@@ -205,10 +206,10 @@ fig_psychoRT <- function(Exp_i) {
                     segment.colour = "grey") +
     coord_trans(x="log10") + 
     scale_y_continuous(limits = c(-0.5, 0.25)) +
-    scale_x_continuous(breaks=c(50, 100, 150)) +
+    scale_x_continuous(limits = c(38, 222), breaks = c(50, 100, 150, 200)) +
     labs(x = "Distance (cm)", 
-         y = "log(RT)\nlog(s)") +
-    theme_pubr() +
+         y = "log(RT) [log(s)]") +
+    theme_bw() +
     theme(axis.text = element_text(size=9), 
           axis.title = element_text(size=10),
           strip.background = element_blank(),
