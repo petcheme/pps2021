@@ -255,7 +255,7 @@ stat_reversals %>%
   group_by(CondBranch, Subject) %>%
   summarise(mean = mean(mean),
             n=n()) %>%
-  {inner_join(dplyr::filter(. ,CondBranch == "dual-near"),
-              dplyr::filter(., CondBranch == "dual-far"),
+  {inner_join(dplyr::filter(. ,CondBranch == "dual-far"),
+              dplyr::filter(., CondBranch == "dual-near"),
               by = "Subject")} %$%
   t.test(mean.x, mean.y, paired = TRUE)
