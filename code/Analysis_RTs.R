@@ -306,13 +306,26 @@ stat_cors %>% select(-data)
 
 # plot PSEs
 ggplot() +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  theme_bw() +
+
+  geom_abline(slope = 1,   intercept = 0, linetype = "dotted", color = "black") +
+  geom_abline(slope = 1.2, intercept = 0, linetype = "dotted", color = "#505050") +
+  geom_abline(slope = 0.8, intercept = 0, linetype = "dotted", color = "#505050") +
   geom_point(data = data_pse,
-             aes(x = PSE, y = PSE.RT, shape = Exp, color = Method), alpha=0.7, size=2) +
+             aes(x = PSE, y = PSE.RT, shape = Exp, color = Method),
+             alpha=0.6, size=2) +
   
-  xlab("PSE from responses [cm]") + ylab("PSE from RTs [cm]") + 
+  xlab("PSE from responses [cm]") +
+  ylab("PSE from RTs [cm]") + 
   scale_color_colorblind() +
-  labs(shape = "Exp.", color = "Method")  + 
+  
+  labs(shape = "Exp.", color = "Method", location = "north") + 
+  theme(legend.position = c(.21, .95),
+        legend.justification = c("right", "top"),
+        legend.box.just = "left",
+        legend.margin = margin(0, 6, 6, 6),
+        legend.title  = element_text(size=9),
+        legend.text   = element_text(size=7)) +
 
   geom_text(data = stat_cors, show.legend = FALSE,
             aes(x = c(150,150,150,150,150,150,150,150)+55,
