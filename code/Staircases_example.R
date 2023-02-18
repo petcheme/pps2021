@@ -202,7 +202,7 @@ panel2.1 <- data_exp_simple %>%
   # average pse
   geom_hline(data = mean_pse %>%
                filter(Condition == "simple"),
-             aes(yintercept = Dist_mean, color = BranchStart),
+             aes(yintercept = m, color = BranchStart),
              linetype = "dashed") +
   # average first reversal
   geom_vline(data = par$mean_fr %>%
@@ -218,7 +218,7 @@ panel2.2 <- data_exp_dual %>%
     # average pse
     geom_hline(data = mean_pse %>%
                filter(Condition == "dual"),
-             aes(yintercept = Dist_mean, color = BranchStart),
+             aes(yintercept = m, color = BranchStart),
              linetype = "dashed") +
     # average first reversal
     geom_vline(data = par$mean_fr %>%
