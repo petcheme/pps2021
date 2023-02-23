@@ -175,7 +175,7 @@ fig_psychoCurve <- function(Exp_i) {
                     size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5,
                     segment.colour = "grey") +
     stat_summary(data = fit.global$averages %>% filter(Experiment == Exp_i), aes(x = Distance, y = prob), 
-                 size = 0.5, width=4, colour="grey", alpha = .7, fun.data = "mean_se", geom="errorbar") +
+                 size = 0.5, width=0, colour="grey", alpha = .7, fun.data = "mean_se", geom="errorbar") +
     stat_summary(data = fit.global$averages %>% filter(Experiment == Exp_i), aes(x = Distance, y = prob), 
                  size = 2.5, colour="grey", alpha = 1, fun.data = "mean_se", geom="point") +
     geom_line(data = fit.global$curves %>% filter(Experiment == Exp_i), aes(x = x, y = y)) +
@@ -197,7 +197,7 @@ fig_psychoRT <- function(Exp_i) {
     ggplot(aes(x = Distance, y = M_RTLog)) +
     geom_point(size = 2.5, colour="grey", alpha = 1) +
     geom_errorbar(aes(ymin = M_RTLog - SE_RTLog, ymax = M_RTLog + SE_RTLog),
-                  size = 0.5, colour="grey", width = 4, alpha = .7) +
+                  size = 0.5, colour="grey", width = 0, alpha = .7) +
     geom_line(data = predicted.LogRT %>% filter(Experiment == Exp_i), aes(x = exp(xfit), y = curve)) +
     geom_vline(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(xintercept=exp(mu)), linetype = "dashed", color="grey") + 
     geom_text_repel(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(x = exp(mu), y = -.25, 
