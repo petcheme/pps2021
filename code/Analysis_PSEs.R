@@ -4,7 +4,7 @@
 pacman::p_load(default,
                here, 
                forcats,
-               ggplot2, 
+               ggplot2, ggthemes,
                magrittr,
                # raincloudplots,
                tidyverse)
@@ -123,22 +123,28 @@ mean_reach_dist <-
 #### 2. DATA PLOTTING ####
 
 # Plot for each experiment (individual + average)
-ggplot(#data = data_pse %>% filter(!IsOutlier)
-       data = data_pse 
+ggplot(data = data_pse %>%
+         filter(!IsOutlier)
        ) +
-  geom_point(aes(x = Method, y = PSE, color = IsOutlier),
-             position = position_jitter(width = .1), alpha=0.55) +
-  geom_errorbar(#data = mean_pse %>% filter(FilterOutliers),
-                data = mean_pse %>% filter(!FilterOutliers),
-                aes(x = Method, y = m, ymin = low, ymax=upp),width=0.1) +
+  labs(y = "PSE (cm)") +
+  geom_point(aes(x = Method, y = PSE, shape = IsOutlier),
+             color = "grey",
+             position = position_jitter(width = .1), alpha=0.75) +
+  geom_pointrange(data = mean_pse %>% filter(!FilterOutliers),
+                  aes(x = Method, y = m, ymin = low, ymax=upp),width=0.1) +
+  # geom_errorbar(#data = mean_pse %>% filter(FilterOutliers),
+  #               data = mean_pse %>% filter(!FilterOutliers),
+  #               aes(x = Method, y = m, ymin = low, ymax=upp),width=0.1) +
   geom_point(#data = mean_pse %>% filter(FilterOutliers),
              data = mean_pse %>% filter(!FilterOutliers),
              aes(x = Method, y = m), color = "black", size=3, alpha=0.75) +
   geom_hline(data = mean_reach_dist,
              aes(yintercept = Reach_mean), linetype = "dashed") + 
   facet_wrap(~Exp) +
-  scale_y_continuous(trans = "log10", breaks = c(60,90,135)) +
-    theme_test()
+  # scale_y_continuous(trans = "log10", breaks = seq(10, 200, 10) # sec(60,90,135)) +
+  scale_y_continuous(breaks = seq(75, 200, 25)
+  ) +
+  theme_bw()
 
 #### 3. SINGLE-EXPERIMENT MODELS ####
 
