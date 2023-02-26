@@ -1,0 +1,28 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Modulation of auditory peripersonal space by approaching and receding sources moving in discrete steps
+### Ignacio Spiousas, Esteban Lombera, Ramiro O. Vergara and Pablo E. Etchemendy.
+
+This Github repository contains the data and code used in the article "Modulation of auditory peripersonal space by approaching and receding sources moving in discrete steps".
+
+## The data
+The folder data contains the data organized by experiment and experimental task and include a data.log file. In order to better explain how the data is organized we will give examples of how the code works.
+
+## The code
+The code can be find in the folder named... well... code.
+
+(acá iría script por script)
+## Questions or comments?
+
+If you have any additional questions or comments about the data or code feel free to contact Ignacio Spiousas (ispiousas (at) udesa.edu.ar) or Pablo E. Etchemendy (petcheme (at) untref.edu.ar).
