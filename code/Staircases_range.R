@@ -27,6 +27,9 @@ pacman::p_load(default,      # redefine default parameters once and 4all: https:
 # Clear workspace
 rm(list = ls())
 
+# flag for (not) saving data
+flag.save.data = F
+
 # Some default values
 default(read_csv) <- list(lazy = FALSE,
                       progress = FALSE,
@@ -156,28 +159,30 @@ plot(p.simple_stair)
 
 # (this code could be less copy-and-paste)
 
-## First, discarded data
-data_staircases %>%
-  filter(Exp == 1, DiscardBlock) %>%
-  select(-Exp, -Trial_aux, -numReversal, -PSE_out_of_range, -ConsecutiveDistance, -DiscardBlock) %>%
-  select(-OutlierDist, -OutlierSubj) %>%
-  write_csv(here("data", "discarded", "data_exp1_staircases.csv"))
+if (flag.save.data) {
 
-data_staircases %>%
-  filter(Exp == 2, DiscardBlock) %>%
-  select(-Exp, -Trial_aux, -numReversal, -PSE_out_of_range, -ConsecutiveDistance, -DiscardBlock) %>%
-  select(-OutlierDist, -OutlierSubj) %>%
-  write_csv(here("data", "discarded", "data_exp2_staircases.csv"))
+  ## First, discarded data
+  data_staircases %>%
+    filter(Exp == 1, DiscardBlock) %>%
+    select(-Exp, -Trial_aux, -numReversal, -PSE_out_of_range, -ConsecutiveDistance, -DiscardBlock) %>%
+    select(-OutlierDist, -OutlierSubj) %>%
+    write_csv(here("data", "discarded", "data_exp1_staircases.csv"))
+  
+  data_staircases %>%
+    filter(Exp == 2, DiscardBlock) %>%
+    select(-Exp, -Trial_aux, -numReversal, -PSE_out_of_range, -ConsecutiveDistance, -DiscardBlock) %>%
+    select(-OutlierDist, -OutlierSubj) %>%
+    write_csv(here("data", "discarded", "data_exp2_staircases.csv"))
+  
+  ## Then, not discarded data
+  data_staircases %>%
+    filter(Exp == 1, !DiscardBlock) %>%
+    select(-Exp, -Trial_aux, -numReversal, -PSE_out_of_range, -ConsecutiveDistance, -DiscardBlock) %>%
+    write_csv(here("data", "data_exp1_staircases.csv"))
+  
+  data_staircases %>%
+    filter(Exp == 2, !DiscardBlock) %>%
+    select(-Exp, -Trial_aux, -numReversal, -PSE_out_of_range, -ConsecutiveDistance, -DiscardBlock) %>%
+    write_csv(here("data", "data_exp2_staircases.csv"))
 
-## Then, not discarded data
-data_staircases %>%
-  filter(Exp == 1, !DiscardBlock) %>%
-  select(-Exp, -Trial_aux, -numReversal, -PSE_out_of_range, -ConsecutiveDistance, -DiscardBlock) %>%
-  write_csv(here("data", "data_exp1_staircases.csv"))
-
-data_staircases %>%
-  filter(Exp == 2, !DiscardBlock) %>%
-  select(-Exp, -Trial_aux, -numReversal, -PSE_out_of_range, -ConsecutiveDistance, -DiscardBlock) %>%
-  write_csv(here("data", "data_exp2_staircases.csv"))
-
-
+}
