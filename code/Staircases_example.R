@@ -6,7 +6,7 @@ pacman::p_load(default,
                magrittr,
                tidyverse)
 
-pacman::p_load(ggplot2,
+pacman::p_load(ggplot2, ggthemes,
                patchwork)
 
 # Clear workspace
@@ -137,7 +137,9 @@ data_panel1.1 <- data_subject %>%
 
 panel1.1 <- data_panel1.1 %>%
   ggplot(aes(x=Trial, y=Distance, group=Block)) +
-    geom_point(aes(color = Start, shape = (Reversal > 2))) +
+    geom_point(aes(color = Start, 
+                   # shape = (Reversal > 2)
+                   )) +
     geom_line(aes(color = Start)) +
     # scale_color_manual(values = c("#F8766D", "#00BFC4")) +
     scale_y_continuous(trans=par$trans) +
@@ -240,7 +242,7 @@ panel3.1 <- data_exp_simple %>%
              linetype = "dashed") +
   scale_y_continuous(breaks = log10(seq(.7, 1.6, by = 0.1)),
                      labels = seq(.7, 1.6, by = 0.1),
-                     limits = log10(c(0.7, 1.6)))
+                     limits = log10(c(0.66, 1.6)))
 
 # Dual staircases
 panel3.2 <- data_exp_dual %>%
@@ -252,35 +254,83 @@ panel3.2 <- data_exp_dual %>%
              linetype = "dashed") +
   scale_y_continuous(breaks = log10(seq(.7, 1.6, by = 0.1)),
                      labels = seq(.7, 1.6, by = 0.1),
-                     limits = log10(c(0.7, 1.6))) +
+                     limits = log10(c(0.66, 1.6))) +
   ylab(NULL)
 
 #### PATCHWORK PLOTS ####
 
+my_theme <- function () { return(theme_bw()) }
+
+my_scale_x <- function (experi, method) { 
+  if (experi == 1 & method == "simple") 
+    {scale_x_continuous(limits = c(1,32), breaks = c(1,seq(5,32, by=5)))}
+  else if (experi == 1 & method == "dual")
+    {scale_x_continuous(limits = c(1,37), breaks = c(1,seq(5,37, by=5)))}
+  else if (experi == 2 & method == "simple") 
+    {scale_x_continuous(limits = c(1,26), breaks = c(1,seq(5,26, by=5)))}
+  else if (experi == 2 & method == "dual")
+    {scale_x_continuous(limits = c(1,31), breaks = c(1,seq(5,31, by=5)))}
+}
+
+my_tag <- function (my_label, experi) {
+  return (labs(tag = paste(my_label, experi, sep = "")) )
+}
+
+# colorblind palette with grey:
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
 (panel1.1 + labs(subtitle="Simple") +
-   theme_classic() +
+   my_theme() +
+   xlab(label = "") + 
+   my_tag(my_label = "a", experi = par$exp) + 
+   my_scale_x(experi = par$exp, method = "simple") + 
+   scale_color_manual(values = cbp1[2:3]) + 
    theme(plot.subtitle = element_text(hjust = 0.5),
-       legend.position = "none") |
+       legend.position = c(.92,.4)
+       ) |
  panel1.2 + labs(subtitle="Dual")   +
-   theme_classic() +
+   my_theme() +
+   my_tag(my_label = "b", experi = par$exp) + 
+   xlab(label = "") + 
+   my_scale_x(experi = par$exp, method = "dual") + 
+   scale_color_manual(values = cbp1[2:3]) + 
    theme(plot.subtitle = element_text(hjust = 0.5),
        legend.position = "none")) /
 
-(panel2.1 + labs(subtitle="Simple") +
-   theme_classic() +
+(panel2.1 + 
+   # labs(subtitle="Simple") +
+   my_theme() +
+   my_tag(my_label = "c", experi = par$exp) + 
+   xlab(label = "") + 
+   my_scale_x(experi = par$exp, method = "simple") + 
+   scale_color_manual(values = cbp1[2:3]) + 
    theme(plot.subtitle = element_text(hjust = 0.5),
        legend.position = "none")  |
- panel2.2 + labs(subtitle="Dual")   +
-   theme_classic() +
+ panel2.2 + 
+   # labs(subtitle="Dual")   +
+   my_theme() +
+   my_tag(my_label = "d", experi = par$exp) + 
+   xlab(label = "") + 
+   my_scale_x(experi = par$exp, method = "dual") + 
+   scale_color_manual(values = cbp1[2:3]) + 
    theme(plot.subtitle = element_text(hjust = 0.5),
        legend.position = "none")) /
 
-(panel3.1 + labs(subtitle="Simple") +
-   theme_classic() +
+(panel3.1 + 
+   # labs(subtitle="Simple") +
+   my_theme() +
+   my_tag(my_label = "e", experi = par$exp) + 
+   my_scale_x(experi = par$exp, method = "simple") + 
+   scale_color_manual(values = cbp1[2:3]) + 
    theme(plot.subtitle = element_text(hjust = 0.5),
        legend.position = "none") |
- panel3.2 + labs(subtitle="Dual")   +
-  theme_classic() +
-  theme(plot.subtitle = element_text(hjust = 0.5),
-      legend.position = "none"))
+ panel3.2 + 
+   # labs(subtitle="Dual")   +
+   my_theme() +
+   my_tag(my_label = "f", experi = par$exp) + 
+   my_scale_x(experi = par$exp, method = "dual") + 
+   scale_color_manual(values = cbp1[2:3]) + 
+   theme(plot.subtitle = element_text(hjust = 0.5),
+       legend.position = "none"))
 
