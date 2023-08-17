@@ -154,6 +154,26 @@ p.simple_stair <- data_staircases %>%
 dev.new()
 plot(p.simple_stair)
 
+# Plot paradigmatic case
+my_breaks <- exp(seq(log(20), log(280), length.out=20))
+my_breaks <- my_breaks[seq(4, 20, 2)]
+my_labels <- formatC(signif(my_breaks, digits=3), digits=3,format="fg", flag="#")
+
+data_staircases %>%
+  filter(Subject == "S07", Condition == "dual") %>%
+  pull(Distance) %>% unique() %>% sort()
+
+data_staircases %>%
+  filter(Subject == "S07", Condition == "dual") %>%
+  ggplot(aes(x = Trial_aux, y = Distance, group = StairId)) +
+  geom_point(aes(color = Reversal > 0)) +
+  geom_line(color = "grey") +
+  scale_y_continuous(trans = "log10",
+                     breaks = my_breaks,
+                     labels = my_labels) +
+  facet_wrap(~Block) +
+  theme_bw() + xlab("Trial Number")
+
 
 # Finally save data 
 
