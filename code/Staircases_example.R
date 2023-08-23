@@ -22,6 +22,7 @@ default(read_csv) <- list(lazy = FALSE,
 options(pillar.sigfig = 4)
 
 # Parameters
+# If you want to plot the invididual staircases for experiment 1 keep this par definition
 par <- list("exp" = 1,
         "subject" = "S06",
       "max_trial" = 30,
@@ -33,6 +34,7 @@ par <- list("exp" = 1,
                            BranchStart = c("near", "far", "near", "far"),
                            Trial_mean  = c(10.1, 7.17, 10.5, 8.17)))
 
+# If you want to plot the invididual staircases for experiment 2 keep this par definition
 par <- list("exp" = 2,
         "subject" = "S56",
       "max_trial" = 26,
