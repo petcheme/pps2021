@@ -6,12 +6,9 @@ pacman::p_load(default,
                forcats,
                ggplot2, ggthemes,
                magrittr,
-               # raincloudplots,
-               tidyverse)
-
-pacman::p_load(emmeans,
+               tidyverse,
+               emmeans,
                lme4,
-               #nlme,
                lmerTest)
 
 # Clear workspace
@@ -121,6 +118,14 @@ mean_reach_dist <-
             n = n(), .groups = "keep") 
 
 #### 2. DATA PLOTTING ####
+exp_names <- list(
+  '1'="Experiment 1",
+  '2'="Experiment 2"
+)
+
+exp_labeller <- function(variable, value){
+  return(exp_names[value])
+}
 
 # Plot for each experiment (individual + average)
 ggplot(data = data_pse %>%
@@ -132,19 +137,19 @@ ggplot(data = data_pse %>%
              position = position_jitter(width = .1), alpha=0.75) +
   geom_pointrange(data = mean_pse %>% filter(!FilterOutliers),
                   aes(x = Method, y = m, ymin = low, ymax=upp),width=0.1) +
-  # geom_errorbar(#data = mean_pse %>% filter(FilterOutliers),
-  #               data = mean_pse %>% filter(!FilterOutliers),
-  #               aes(x = Method, y = m, ymin = low, ymax=upp),width=0.1) +
-  geom_point(#data = mean_pse %>% filter(FilterOutliers),
-             data = mean_pse %>% filter(!FilterOutliers),
+  geom_point(data = mean_pse %>% filter(!FilterOutliers),
              aes(x = Method, y = m), color = "black", size=3, alpha=0.75) +
   geom_hline(data = mean_reach_dist,
              aes(yintercept = Reach_mean), linetype = "dashed") + 
-  facet_wrap(~Exp) +
-  # scale_y_continuous(trans = "log10", breaks = seq(10, 200, 10) # sec(60,90,135)) +
-  scale_y_continuous(breaks = seq(75, 200, 25)
-  ) +
-  theme_bw()
+  facet_wrap(~Exp, labeller = exp_labeller) +
+  scale_y_continuous(breaks = seq(75, 200, 25)) +
+  scale_x_discrete(labels = c("Psy-curve", "Simple-near", "Dual", "Simple-far")) +
+  theme_bw() +
+  theme(legend.position = "none",
+        strip.text = element_text(size = 10),
+        strip.background = element_rect(fill = "white", colour = "white", size = 1))
+
+ggsave(here("figures/fig_4.png"), width = 18, height = 10, units = "cm")
 
 #### 3. SINGLE-EXPERIMENT MODELS ####
 

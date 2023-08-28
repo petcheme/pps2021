@@ -14,9 +14,8 @@ pacman::p_load(default,
                forcats,
                ggplot2, ggthemes, patchwork,
                magrittr,
-               tidyverse)
-
-pacman::p_load(lme4)
+               tidyverse,
+               lme4)
 
 # Clear workspace
 rm(list = ls())
@@ -317,9 +316,10 @@ ggplot() +
   
   xlab("PSE from responses [cm]") +
   ylab("PSE from RTs [cm]") + 
-  scale_color_colorblind() +
+  scale_color_colorblind(labels = c("Psy-curve", "Simple-near", "Dual", "Simple-far")) +
+
   
-  labs(shape = "Exp.", color = "Method", location = "north") + 
+  labs(shape = "Experiment", color = "Method", location = "north") + 
   theme(legend.position = c(.21, .95),
         legend.justification = c("right", "top"),
         legend.box.just = "left",
@@ -336,7 +336,11 @@ ggplot() +
                 color = Method), size = 3) +
   # Display correlation coefficients
   annotate("point", x = c(150,150,150,150)+50,
-                    y = seq(from=50, to=101, by=17)-29, shape = 17, alpha=0.7) +
+                    y = seq(from=50, to=101, by=17)-29, shape = 17, alpha=0.7,
+                    color = c("#009E73", "#56B4E9", "#E69F00", "#111111")) +
   annotate("point", x = c(150,150,150,150)+50,
-                    y = seq(from=118, to=176, by=17)-29, shape = 16, alpha=0.7)
-  
+                    y = seq(from=118, to=176, by=17)-29, shape = 16, alpha=0.7,
+           color = c("#009E73", "#56B4E9", "#E69F00", "#111111"))
+
+ggsave(here("figures/fig_5.png"), width = 14, height = 12, units = "cm")
+    

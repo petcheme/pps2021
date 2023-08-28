@@ -122,7 +122,7 @@ fig_staircase <- function(par, colormap, ylabel) {
   panel1.1 <- data_panel1.1 %>%
     ggplot(aes(x=Trial, y=Distance, group=Block)) +
       geom_point(aes(color = Start, 
-                     # shape = (Reversal > 2)
+                       alpha = .6
                      )) +
       geom_line(aes(color = Start)) +
       # scale_color_manual(values = c("#F8766D", "#00BFC4")) +
@@ -152,7 +152,7 @@ fig_staircase <- function(par, colormap, ylabel) {
   
   panel1.2 <- data_panel1.2 %>%
     ggplot(aes(x=Trial, y=Distance, group = BranchStart)) +
-      geom_point(aes(color = BranchStart)) +
+      geom_point(aes(color = BranchStart), alpha = .6) +
       geom_line(aes(color = BranchStart)) +
       scale_y_continuous(trans=par$trans) +
       #scale_color_manual(values = c("#00BFC4", "#F8766D")) +
@@ -181,7 +181,7 @@ fig_staircase <- function(par, colormap, ylabel) {
   # Simple staircases
   panel2.1 <- data_exp_simple %>%
     ggplot(aes(x=Trial, y=Dist_mean, group=Start)) +
-    geom_point(aes(color = Start)) + geom_line(aes(color = Start)) +
+    geom_point(aes(color = Start), alpha = .6) + geom_line(aes(color = Start)) +
     scale_y_continuous(trans=par$trans) +
     ylab(label_list[[ylabel]]) +
     # average pse
@@ -199,7 +199,7 @@ fig_staircase <- function(par, colormap, ylabel) {
   # Dual staircases
   panel2.2 <- data_exp_dual %>%
       ggplot(aes(x=Trial, y=Dist_mean, group = Branch)) +
-      geom_point(aes(color = Branch)) + geom_line(aes(color = Branch)) +
+      geom_point(aes(color = Branch), alpha = .6) + geom_line(aes(color = Branch)) +
       scale_y_continuous(trans=par$trans) +
       # average pse
       geom_hline(data = mean_pse %>%
@@ -220,7 +220,7 @@ fig_staircase <- function(par, colormap, ylabel) {
   # Simple staircases
   panel3.1 <- data_exp_simple %>%
     ggplot(aes(x=Trial, y=RTlog_mean, group=Start)) +
-    geom_point(aes(color = Start)) + geom_line(aes(color = Start)) +
+    geom_point(aes(color = Start), alpha = .6) + geom_line(aes(color = Start)) +
     ylab(label_list[[ylabel]]) +
     geom_vline(data = par$mean_fr %>%
                filter(Condition == "simple"),
@@ -233,7 +233,7 @@ fig_staircase <- function(par, colormap, ylabel) {
   # Dual staircases
   panel3.2 <- data_exp_dual %>%
     ggplot(aes(x=Trial, y=RTlog_mean, group=Branch)) +
-    geom_point(aes(color = Branch)) + geom_line(aes(color = Branch)) +
+    geom_point(aes(color = Branch), alpha = .6) + geom_line(aes(color = Branch)) +
     geom_vline(data = par$mean_fr %>%
                filter(Condition == "dual"),
                aes(xintercept = Trial_mean, color = BranchStart),
@@ -304,7 +304,7 @@ fig_staircase <- function(par, colormap, ylabel) {
 # colorblind palette with grey:
 cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
           "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-colormap <- cbp1[2:3]
+colormap <- cbp1[c(4,2)]
 
 #### EXPERIMENT 1 STAIRCASE ####
 # If you want to plot the invididual staircases for experiment 1 keep this par definition
@@ -340,8 +340,7 @@ fig_staircase_exp_2 <- fig_staircase(par, colormap, FALSE)
     ggplot() + labs(title = "Experiment 2")+ theme_void() + theme(plot.title = element_text(size = 12, hjust = .5), plot.title.position = "plot")) /
   (fig_staircase_exp_1 | fig_staircase_exp_2 ) +
   plot_layout(heights = c(1,30)) +
-  plot_annotation(title = paste0("Start point of the staircase: <b style='color:",colormap[1],"'>Far</b> <b style='color:",colormap[2],"'>Close</b>"),
-                  theme = theme(plot.title =element_markdown(face = "bold", hjust = .5, size = 9)))
+  plot_annotation(caption = paste0("Start point of the staircase: <b style='color:",colormap[1],"'>Far</b> <b style='color:",colormap[2],"'>Near</b>"),
+                  theme = theme(plot.caption =element_markdown(face = "bold", hjust = .5, size = 9)))
   
 ggsave(here("figures/fig_3.png"), width = 18, height = 14, units = "cm")
-  
