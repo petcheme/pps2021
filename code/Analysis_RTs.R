@@ -201,13 +201,17 @@ table_plots <- data_rt %>%
       ggplot() +
       # data points
       geom_point(data = . %>% unnest(data),
-                 aes(x=Distance, y=RTlog), size = .5) +
+                 aes(x=Distance, y=RTlog), size = .5,
+                 color = "#999999") +
       facet_grid(Subject ~ Method, scales = "free_y", drop = FALSE) +
-      theme_classic() + 
-      ylab("RT") + 
+      scale_x_discrete(labels = c("Psy-curve", "Simple-near", "Dual", "Simple-far")) +
+      labs(x = "Distance (cm)", y = "RT") + 
+      theme_bw() + 
+      theme(strip.text = element_text(size = 10),
+            strip.background = element_rect(fill = "white", colour = "white", size = 1)) +
       # fitted curves
       geom_line(data = . %>% unnest(fit_curve),
-                aes(x=x, y=y), color = "red")
+                aes(x=x, y=y), color = "#D55E00")
     )) %>%
   # removes data, models, etc.
   select(-data) %>%
@@ -250,8 +254,8 @@ table_plots %<>% group_by(Exp) %>%
 
 # ...and save it in PNG format
 table_plots %$% map2(Exp, full_plot, function(Exp, plot)
-  ggsave(plot = plot , filename = paste0("RTs_fit_exp", Exp, ".png"),
-         width = 8*1.35, height = 28*1.35, units = "cm", dpi = 300))
+  ggsave(plot = plot , filename = here(paste0("figures/fig_S6_", Exp, ".png")),
+         width = 18, height = 60, units = "cm"))
 
 #### 3. PSEs COMPARISON ####
 
