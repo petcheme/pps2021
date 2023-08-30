@@ -99,22 +99,43 @@ mean_firstrev_rt <- stat_firstrev_rt %>%
 
 
 # ---- Plot ----
+my_jitter <- position_jitter(width = 0.1, height = 0.01)
+
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+colormap <- cbp1[c(3,7)]
+
+exp_names <- list(
+  '1'="Experiment 1",
+  '2'="Experiment 2"
+)
+
+exp_labeller <- function(variable, value){
+  return(exp_names[value])
+}
 
 ggplot(stat_firstrev_rt, aes(x = CondBranch, y = diff)) +
-         geom_point(aes(color = BranchStart)) +
+  geom_point(aes(color = BranchStart), 
+             alpha = .3, 
+             position = my_jitter) +
   geom_pointrange(data = mean_firstrev_rt,
-                  position = position_nudge(x=0.1),
+                  #position = position_nudge(x=0.1),
                   aes(x = CondBranch, 
                       y = mean,
                       ymin = low,
                       ymax = upp)) +
   geom_hline(yintercept = 0, linetype = "longdash", color = "darkgrey") +
   # plot layout
-  facet_wrap( ~ Exp) +
-  ylab("Time [log10(s)] (RT diff: after 1st rev - before)") +
-  xlab("Method x Start") + 
-  theme_classic()
+  facet_wrap( ~ Exp, labeller = exp_labeller) +
+  scale_color_manual(values = colormap) +
+  scale_x_discrete(labels = c("Dual-far", "Dual-near", "Simple-far", "Simple-near")) +
+  labs(x = "Method x Start", y = "Time [log10(s)] (RT diff: after 1st rev - before)", color = "Branch start") +
+  theme_bw() +
+  theme(legend.position = "top",
+        strip.text = element_text(size = 10),
+        strip.background = element_rect(fill = "white", colour = "white"))
 
+ggsave(here("figures/fig_S4_1.png"), width = 18, height = 12, units = "cm")
 # ---- Statistical analysis ----
 
 comp_list <- stat_firstrev_rt %>%
@@ -135,3 +156,4 @@ comp_list %>%
   relocate(df, .after = t) %>%
   group_by(Exp) %>%
   mutate(p.adj = p.adjust(p.value, method = "bonferroni"), .after = p.value)
+

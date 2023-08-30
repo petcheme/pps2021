@@ -163,18 +163,38 @@ data_staircases %>%
   filter(Subject == "S07", Condition == "dual") %>%
   pull(Distance) %>% unique() %>% sort()
 
+exp_names <- list(
+  '1'="First presentation",
+  '2'="Second presentation"
+)
+
+exp_labeller <- function(variable, value){
+  return(exp_names[value])
+}
+
+# colorblind palette with grey:
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+colormap <- cbp1[c(3,7)]
+
 data_staircases %>%
   filter(Subject == "S07", Condition == "dual") %>%
   ggplot(aes(x = Trial_aux, y = Distance, group = StairId)) +
-  geom_point(aes(color = Reversal > 0)) +
-  geom_line(color = "grey") +
+  geom_line(aes(color = BranchStart), alpha = .2) +
+  geom_point(aes(color = BranchStart, alpha = Reversal>1), show.legend = F) +
   scale_y_continuous(trans = "log10",
                      breaks = my_breaks,
                      labels = my_labels) +
-  facet_wrap(~Block) +
-  theme_bw() + xlab("Trial Number")
+  facet_wrap(~Block, labeller = exp_labeller) +
+  scale_color_manual(values = colormap) +
+  scale_alpha_manual(values = c(.2,1)) +
+  labs(x = "Trial Number", y = "Distance (cm)", color = "Branch start", alpha = "Reversal") +
+  theme_bw() +
+  theme(legend.position = "top",
+        strip.text = element_text(size = 10),
+        strip.background = element_rect(fill = "white", colour = "white"))
 
-
+ggsave(here("figures/fig_S2_1.png"), width = 18, height = 9, units = "cm")
 # Finally save data 
 
 # (this code could be less copy-and-paste)

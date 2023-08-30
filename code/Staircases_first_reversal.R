@@ -94,14 +94,27 @@ mean_firstrev %>% ungroup() %>%
 # ---- Plot ----
 my_jitter <- position_jitter(width = 0.1, height = 0.01)
 
+# colorblind palette with grey:
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+colormap <- cbp1[c(3,7)]
+
+exp_names <- list(
+  '1'="Experiment 1",
+  '2'="Experiment 2"
+)
+
+exp_labeller <- function(variable, value){
+  return(exp_names[value])
+}
+
 ggplot(data = stat_firstrev,
        aes(x = CondBranch, 
            y = Trial_mean)) +
   # point layer
   geom_point(aes(color = BranchStart,
-                 shape = IsOutlier),
+                 alpha = IsOutlier),
                   size = 2,
-                 alpha = 0.5,
               position = my_jitter) +
   # line layer
   geom_line(aes(group = interaction(Subject,BranchStart)),
@@ -109,24 +122,29 @@ ggplot(data = stat_firstrev,
              linetype = "longdash") +
   # group means
   geom_pointrange(data = mean_firstrev,
-                  position = position_nudge(x=0.1),
+                  #position = position_nudge(x=0.1),
                   aes(   x = CondBranch, 
                          y = m,
                       ymin = low,
                       ymax = upp)) +
   geom_line(data = mean_firstrev, 
             linetype = "longdash",
-            position = position_nudge(x=0.1),
+            #position = position_nudge(x=0.1),
             aes(x = CondBranch ,
                 y = m,
                 group=interaction(Exp, BranchStart))) +
+  scale_color_manual(values = colormap) +
+  scale_alpha_manual(values = c(.2, 1), guide = "none") +
+  scale_x_discrete(labels = c("Dual-far", "Dual-near", "Simple-far", "Simple-near")) +
   # plot layout
-  facet_wrap( ~ Exp) +
-  ylab("Trial of first reversal") +
-  xlab("Method x Start") + 
-  theme_classic()
+  facet_wrap( ~ Exp, labeller = exp_labeller) +
+  labs(x = "Method x Start", y = "Trial of first reversal", color = "Branch start") +
+  theme_bw() +
+  theme(legend.position = "top",
+        strip.text = element_text(size = 10),
+        strip.background = element_rect(fill = "white", colour = "white"))
 
-
+ggsave(here("figures/fig_S3_1.png"), width = 18, height = 12, units = "cm")
 # ---- Statistical analysis ----
 
 # purr::pmap version (one single pipe mapped repeatedly over our data)

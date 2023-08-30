@@ -151,3 +151,4 @@ data_reach %>%
         strip.background = element_rect(fill = "white", colour = "white"))
 
 ggsave(here("figures/fig_S1_2.png"), width = 18, height = 9, units = "cm")
+

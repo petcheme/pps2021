@@ -127,7 +127,7 @@ exp_labeller <- function(variable, value){
   return(exp_names[value])
 }
 
-# Plot for each experiment (individual + average)
+# Plot for each experiment (individual + average) without outliers
 ggplot(data = data_pse %>%
          filter(!IsOutlier)
        ) +
@@ -150,6 +150,32 @@ ggplot(data = data_pse %>%
         strip.background = element_rect(fill = "white", colour = "white", size = 1))
 
 ggsave(here("figures/fig_4.png"), width = 18, height = 10, units = "cm")
+
+# Plot for each experiment (individual + average) with outliers
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+colormap <- cbp1[c(1,7)]
+
+ggplot(data = data_pse) +
+  labs(y = "PSE (cm)") +
+  geom_point(aes(x = Method, y = PSE, color = IsOutlier),
+             position = position_jitter(width = .1), alpha=0.75) +
+  geom_pointrange(data = mean_pse %>% filter(!FilterOutliers),
+                  aes(x = Method, y = m, ymin = low, ymax=upp),width=0.1) +
+  # geom_point(data = mean_pse %>% filter(!FilterOutliers),
+  #            aes(x = Method, y = m), color = "black", size=3, alpha=0.75) +
+  geom_hline(data = mean_reach_dist,
+             aes(yintercept = Reach_mean), linetype = "dashed") + 
+  facet_wrap(~Exp, labeller = exp_labeller) +
+  scale_y_continuous(breaks = seq(75, 200, 25)) +
+  scale_x_discrete(labels = c("Psy-curve", "Simple-near", "Dual", "Simple-far")) +
+  scale_color_manual(values = colormap) +
+  theme_bw() +
+  theme(legend.position = "top",
+        strip.text = element_text(size = 10),
+        strip.background = element_rect(fill = "white", colour = "white", size = 1))
+
+ggsave(here("figures/fig_S5_1.png"), width = 18, height = 10, units = "cm")
 
 #### 3. SINGLE-EXPERIMENT MODELS ####
 
