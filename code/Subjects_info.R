@@ -78,16 +78,31 @@ age.effsize <- age.t.test %$%
   abs((estimate[1] - estimate[2]) / stderr)
 
 # plot
+exp_names <- list(
+  '1'="Experiment 1",
+  '2'="Experiment 2"
+)
+
+exp_labeller <- function(variable, value){
+  return(exp_names[value])
+}
+
 data_demographics %>% 
   group_by(Experiment) %>% 
   ggplot(aes(x=Age, fill=factor(Experiment))) +
-    geom_histogram(color="#e9ecef", alpha=0.6, binwidth = 5, position = 'identity') +
-    scale_fill_manual(values=c("#69b3a2", "#404080")) +
-    facet_wrap(~ Experiment) +
-    geom_vline(data = stats_demographics, 
-               aes(xintercept = Age_mean), 
-               linetype = "dashed")
+  geom_histogram(color="#e9ecef", alpha=0.6, binwidth = 5, position = 'identity') +
+  scale_fill_manual(values=c("#69b3a2", "#404080")) +
+  facet_wrap(~Experiment, labeller = exp_labeller) +
+  geom_vline(data = stats_demographics, 
+             aes(xintercept = Age_mean), 
+             linetype = "dashed") +
+  labs(x = "Age (years)", y = "Counts") +
+  theme_bw() +
+  theme(legend.position = "none",
+        strip.text = element_text(size = 10),
+        strip.background = element_rect(fill = "white", colour = "white"))
 
+ggsave(here("figures/fig_S1_1.png"), width = 18, height = 9, units = "cm")
 
 # Reaching distance comparison
 
@@ -125,8 +140,14 @@ data_reach %>%
   ggplot(aes(x=Reach, fill=Exp)) +
   geom_histogram(color="#e9ecef", alpha=0.6, binwidth = 5, position = 'identity') +
   scale_fill_manual(values=c("#69b3a2", "#404080")) +
-  facet_wrap(~ Exp) +
+  facet_wrap(~ Exp, labeller = exp_labeller) +
   geom_vline(data = stats_reach, 
              aes(xintercept = Reach_mean), 
-             linetype = "dashed")
+             linetype = "dashed") +
+  labs(x = "Maximum reaching distance (cm)", y = "Counts") +
+  theme_bw() +
+  theme(legend.position = "none",
+        strip.text = element_text(size = 10),
+        strip.background = element_rect(fill = "white", colour = "white"))
 
+ggsave(here("figures/fig_S1_2.png"), width = 18, height = 9, units = "cm")
