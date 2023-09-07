@@ -75,8 +75,6 @@ data_pse %<>%
   mutate(IsOutlier = PSE < low.iqr |
                      PSE > upp.iqr)
 
-data_pse %>% filter(IsOutlier)
-
 # Make two versions of the data: with and without you...tliers
 mean_pse <- data_pse %>%
   select(-low.iqr, -upp.iqr) %>%
@@ -149,7 +147,7 @@ ggplot(data = data_pse %>%
         strip.text = element_text(size = 10),
         strip.background = element_rect(fill = "white", colour = "white", size = 1))
 
-ggsave(here("figures/fig_4.png"), width = 18, height = 10, units = "cm")
+ggsave(here("figures/fig_4.png"), width = 18, height = 10, units = "cm") # Sin Outliers
 
 # Plot for each experiment (individual + average) with outliers
 cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
@@ -157,7 +155,7 @@ cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
 colormap <- cbp1[c(1,7)]
 
 ggplot(data = data_pse) +
-  labs(y = "PSE (cm)") +
+  labs(y = "PSE (cm)", color = "Is outlier:") +
   geom_point(aes(x = Method, y = PSE, color = IsOutlier),
              position = position_jitter(width = .1), alpha=0.75) +
   geom_pointrange(data = mean_pse %>% filter(!FilterOutliers),
@@ -175,7 +173,7 @@ ggplot(data = data_pse) +
         strip.text = element_text(size = 10),
         strip.background = element_rect(fill = "white", colour = "white", size = 1))
 
-ggsave(here("figures/fig_S5_1.png"), width = 18, height = 10, units = "cm")
+ggsave(here("figures/fig_S5_1.png"), width = 18, height = 10, units = "cm") # Con Outliers
 
 #### 3. SINGLE-EXPERIMENT MODELS ####
 
@@ -346,3 +344,4 @@ data_pse %>%
   filter(!IsOutlier) %>%  
   lmer(formula = PSE ~ Method*Exp + (1 | Subject)) %>%
   anova()
+
