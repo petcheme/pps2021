@@ -99,7 +99,7 @@ mean_firstrev_rt <- stat_firstrev_rt %>%
 
 
 # ---- Plot ----
-my_jitter <- position_jitter(width = 0.1, height = 0.01)
+my_jitter <- position_jitter(width = 0.1, height = 0)
 
 cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
           "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
