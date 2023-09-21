@@ -228,5 +228,5 @@ fig1 <- (fig1a | fig1b) / (fig1c | fig1d) +
 fig1
 
 scale <- 1.2
-ggsave(here("figures", "fig_1.png"), width = scale * 18, height = scale * 12, units = "cm")
+ggsave(here("figures", "fig_2.png"), width = scale * 18, height = scale * 12, units = "cm")
  
