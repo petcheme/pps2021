@@ -3,7 +3,7 @@
 
 # Modulation of auditory peripersonal space by approaching and receding sources moving in discrete steps
 
-### Ignacio Spiousas, Esteban Lombera, Ramiro O. Vergara and Pablo E. Etchemendy. <img src='https://ddhh.unq.edu.ar/wp-content/uploads/2017/04/Logo-UNQ-RGB.png' align="right" height="120" />
+### Ignacio Spiousas, Esteban Lombera, Ramiro O. Vergara and Pablo E. Etchemendy.
 
 This Github repository contains the data and code used in the article
 “Modulation of auditory peripersonal space by approaching and receding
@@ -55,7 +55,25 @@ works.
 
 The code can be find in the folder named… well… code.
 
-(acá iría script por script)
+**Outliers_IQR.R**: Performs the Outliers analysis (it should be run at the beginning).
+
+**Psy_curve.R**: This script process and fit all the psychometric curves and generates *Figure 2*.
+
+**Staircases_example.R**: Generates *Figure 3*.
+
+**Analysis_PSEs.R**: Generates *Figure 4* and *Figure S5.1* (PSEs with and without excluding outliers).
+
+**Analysis_RTs.R**: Generates *Figure 5*.
+
+**Subjects_info.R**: Generates *Figure S1.1* and *Figure S1.2*.
+
+**Staircases_range.R**: Generates *Figure S2.1* on line 157.
+
+**Staircases_first_reversal.R**: Generates *Figure S3.1* on line 95.
+
+**Staircases_first_reversal_RT.R**:  Generates *Figure S4.1* on line 102.
+
+**Analysis_RTs.R**: Generates *Figure S6.1* (individual fits of RT) on section 2.
 
 ## Questions or comments?
 
