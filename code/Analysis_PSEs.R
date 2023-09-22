@@ -75,7 +75,7 @@ data_pse %<>%
   mutate(IsOutlier = PSE < low.iqr |
                      PSE > upp.iqr)
 
-# Make two versions of the data: with and without you...tliers
+# Make two versions of the data: with and without Outliers
 mean_pse <- data_pse %>%
   select(-low.iqr, -upp.iqr) %>%
   group_by(Exp) %>%
