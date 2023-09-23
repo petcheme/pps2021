@@ -80,3 +80,7 @@ The code can be find in the folder named… well… code.
 If you have any additional questions or comments about the data or code
 feel free to contact Ignacio Spiousas (ispiousas (at) udesa.edu.ar) or
 Pablo E. Etchemendy (petcheme (at) untref.edu.ar).
+
+## Preprint version of the article
+
+https://psyarxiv.com/9nfqz/
