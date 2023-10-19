@@ -215,7 +215,7 @@ fig_staircase <- function(par, colormap, ylabel) {
   
   #### 3RD ROW: Response times ####
   
-  label_list <- list("Response time [s]", NULL)
+  label_list <- list("Log response time [log(s)]", NULL)
   
   # Simple staircases
   panel3.1 <- data_exp_simple %>%

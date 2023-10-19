@@ -158,6 +158,12 @@ pos <- position_jitter(height = 0.05, seed = 1)
 
 fig_psychoCurve <- function(Exp_i) {
   # Exp_i is a string containing the experiment ID ("exp1" or "exp2")
+  if (Exp_i == "exp1") {
+    title <- "Experiment 1"
+  } else {
+    title <- "Experiment 2"
+  }
+  
   thresholds.df %>% filter(Experiment == Exp_i) %>%
     ggplot(aes(x = thre, y = prob)) + 
     geom_point(colour="black", fill="grey", alpha = .7, pch=21, size=2.5) + 
@@ -181,10 +187,12 @@ fig_psychoCurve <- function(Exp_i) {
     geom_line(data = fit.global$curves %>% filter(Experiment == Exp_i), aes(x = x, y = y)) +
     scale_x_continuous(limits = c(38, 222), breaks = c(50, 100, 150, 200)) +
     coord_trans(x="log10") +
-    labs(y = "No reach proportion") +
+    labs(y = "No reach proportion",
+         title = title) +
     theme_bw() +
     theme(axis.title.x=element_blank(), 
           axis.text = element_text(size=8), axis.title = element_text(size=10),
+          plot.title = element_text(hjust = 0.5),
           strip.background = element_blank(),
           strip.text = element_text(size=12)) 
 }
@@ -216,16 +224,16 @@ fig_psychoRT <- function(Exp_i) {
           strip.text = element_blank())
 }
 
-fig1a <- fig_psychoCurve("exp1")
-fig1b <- fig_psychoCurve("exp2")
+fig2a <- fig_psychoCurve("exp1")
+fig2b <- fig_psychoCurve("exp2")
 
-fig1c <- fig_psychoRT("exp1")
-fig1d <- fig_psychoRT("exp2")
+fig2c <- fig_psychoRT("exp1")
+fig2d <- fig_psychoRT("exp2")
 
-fig1 <- (fig1a | fig1b) / (fig1c | fig1d) + 
+fig2 <- (fig2a | fig2b) / (fig2c | fig2d) + 
   plot_layout(heights = c(1, .7)) +
   plot_annotation(tag_levels = 'a')
-fig1
+fig2
 
 scale <- 1.2
 ggsave(here("figures", "fig_2.png"), width = scale * 18, height = scale * 12, units = "cm")
