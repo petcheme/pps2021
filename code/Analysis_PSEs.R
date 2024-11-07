@@ -131,8 +131,8 @@ ggplot(data = data_pse %>%
        ) +
   labs(y = "PSE (cm)") +
   geom_point(aes(x = Method, y = PSE, shape = IsOutlier),
-             color = "grey",
-             position = position_jitter(width = .1), alpha=0.75) +
+             color = "black",
+             position = position_jitter(width = .1), alpha=0.4) +
   geom_pointrange(data = mean_pse %>% filter(!FilterOutliers),
                   aes(x = Method, y = m, ymin = low, ymax=upp),width=0.1) +
   geom_point(data = mean_pse %>% filter(!FilterOutliers),
@@ -141,13 +141,15 @@ ggplot(data = data_pse %>%
              aes(yintercept = Reach_mean), linetype = "dashed") + 
   facet_wrap(~Exp, labeller = exp_labeller) +
   scale_y_continuous(breaks = seq(75, 200, 25)) +
-  scale_x_discrete(labels = c("Psy-curve", "Simple-near", "Dual", "Simple-far")) +
+  scale_x_discrete(labels = c("Psy\ncurve", "Simple\nnear", "Dual", "Simple\nfar")) +
   theme_bw() +
   theme(legend.position = "none",
-        strip.text = element_text(size = 10),
+        strip.text = element_text(size = 11),
+        axis.text = element_text(size=11), 
+        axis.title = element_text(size=12),
         strip.background = element_rect(fill = "white", colour = "white", size = 1))
 
-ggsave(here("figures/fig_4.png"), width = 18, height = 10, units = "cm") # Sin Outliers
+ggsave(here("figures/fig_4_big.png"), width = 18, height = 10, units = "cm") # Sin Outliers
 
 # Plot for each experiment (individual + average) with outliers
 cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",

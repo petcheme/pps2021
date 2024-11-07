@@ -245,7 +245,7 @@ fig_staircase <- function(par, colormap, ylabel) {
   
   #### PATCHWORK PLOTS ####
   
-  theme_set(theme_bw(base_size = 8))
+  theme_set(theme_bw(base_size = 9))
   theme_update(plot.subtitle = element_text(hjust = 0.5),
                legend.position = "none")
   
@@ -336,11 +336,11 @@ par <- list("exp" = 2,
 
 fig_staircase_exp_2 <- fig_staircase(par, colormap, FALSE)
 
-(ggplot() + labs(title = "Experiment 1") + theme_void() + theme(plot.title = element_text(size = 12, hjust = .5), plot.title.position = "plot") | 
-    ggplot() + labs(title = "Experiment 2")+ theme_void() + theme(plot.title = element_text(size = 12, hjust = .5), plot.title.position = "plot")) /
+(ggplot() + labs(title = "Experiment 1") + theme_void() + theme(plot.title = element_text(size = 11, hjust = .5), plot.title.position = "plot") | 
+    ggplot() + labs(title = "Experiment 2")+ theme_void() + theme(plot.title = element_text(size = 11, hjust = .5), plot.title.position = "plot")) /
   (fig_staircase_exp_1 | fig_staircase_exp_2 ) +
   plot_layout(heights = c(1,30)) +
   plot_annotation(caption = paste0("Start point of the staircase: <b style='color:",colormap[1],"'>Far</b> <b style='color:",colormap[2],"'>Near</b>"),
-                  theme = theme(plot.caption =element_markdown(face = "bold", hjust = .5, size = 9)))
+                  theme = theme(plot.caption = element_markdown(face = "bold", hjust = .5, size = 11)))
   
-ggsave(here("figures/fig_3.png"), width = 18, height = 14, units = "cm")
+ggsave(here("figures/fig_3_big.png"), width = 18, height = 14, units = "cm")

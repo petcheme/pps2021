@@ -172,14 +172,13 @@ fig_psychoCurve <- function(Exp_i) {
     geom_errorbarh(data = fit.global$thresholds %>% filter(Experiment == Exp_i), aes(xmax = thresup, xmin = threinf), height = .05, size = .5) +
     geom_point(data = fit.global$thresholds %>% filter(Experiment == Exp_i), aes(x = thre, y = prob),
                size = 2.5, stat="identity", color="black") +
-    geom_text_repel(data = fit.global$thresholds %>% filter(Experiment == Exp_i), 
-                    aes(x = thre, y = prob/2, 
-                        label=sprintf("PSE=%.1f cm\nCI(%.1f %.1f)", 
-                                      fit.global$thresholds %>% filter(Experiment == Exp_i) %$% thre,
-                                      fit.global$thresholds %>% filter(Experiment == Exp_i) %$% threinf,
-                                      fit.global$thresholds %>% filter(Experiment == Exp_i) %$% thresup)),
-                    size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5,
-                    segment.colour = "grey") +
+    geom_text(data = fit.global$thresholds %>% filter(Experiment == Exp_i), 
+              aes(x = thre*1.05, y = prob/2, 
+                  label=sprintf("PSE=%.1f cm\nCI(%.1f %.1f)", 
+                                fit.global$thresholds %>% filter(Experiment == Exp_i) %$% thre,
+                                fit.global$thresholds %>% filter(Experiment == Exp_i) %$% threinf,
+                                fit.global$thresholds %>% filter(Experiment == Exp_i) %$% thresup)),
+              size=3.4, hjust = 0) +
     stat_summary(data = fit.global$averages %>% filter(Experiment == Exp_i), aes(x = Distance, y = prob), 
                  size = 0.5, width=0, colour="grey", alpha = .7, fun.data = "mean_se", geom="errorbar") +
     stat_summary(data = fit.global$averages %>% filter(Experiment == Exp_i), aes(x = Distance, y = prob), 
@@ -191,7 +190,7 @@ fig_psychoCurve <- function(Exp_i) {
          title = title) +
     theme_bw() +
     theme(axis.title.x=element_blank(), 
-          axis.text = element_text(size=8), axis.title = element_text(size=10),
+          axis.text = element_text(size=11), axis.title = element_text(size=11),
           plot.title = element_text(hjust = 0.5),
           strip.background = element_blank(),
           strip.text = element_text(size=12)) 
@@ -208,18 +207,17 @@ fig_psychoRT <- function(Exp_i) {
                   size = 0.5, colour="grey", width = 0, alpha = .7) +
     geom_line(data = predicted.LogRT %>% filter(Experiment == Exp_i), aes(x = exp(xfit), y = curve)) +
     geom_vline(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(xintercept=exp(mu)), linetype = "dashed", color="grey") + 
-    geom_text_repel(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(x = exp(mu), y = -.25, 
+    geom_text(data = fit_pars.logRT %>% filter(Experiment == Exp_i), aes(x = exp(mu)*1.05, y = -.35, 
                                                label=paste0(sprintf("PSE=%.1f", exp(mu)), " cm")),
-                    size=3, nudge_y=-0.04, nudge_x=10, direction="y", angle=0, vjust=1, segment.size = .5, 
-                    segment.colour = "grey") +
+                    size=3.4, hjust = 0) +
     coord_trans(x="log10") + 
     scale_y_continuous(limits = c(-0.5, 0.25)) +
     scale_x_continuous(limits = c(38, 222), breaks = c(50, 100, 150, 200)) +
     labs(x = "Distance (cm)", 
          y = "log(RT) [log(s)]") +
     theme_bw() +
-    theme(axis.text = element_text(size=9), 
-          axis.title = element_text(size=10),
+    theme(axis.text = element_text(size=11), 
+          axis.title = element_text(size=11),
           strip.background = element_blank(),
           strip.text = element_blank())
 }
@@ -236,5 +234,5 @@ fig2 <- (fig2a | fig2b) / (fig2c | fig2d) +
 fig2
 
 scale <- 1.2
-ggsave(here("figures", "fig_2.png"), width = scale * 18, height = scale * 12, units = "cm")
+ggsave(here("figures", "fig_2_big.png"), width = scale * 18, height = scale * 12, units = "cm")
  

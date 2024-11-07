@@ -156,7 +156,7 @@ my_model <- nls(data    = aux.data,
                 #start   = aux.start,
                 start   = c(a0=0, a=100, x0=20, k=100),
                 control = nls.control(maxiter= 5000, tol = 1e-18),
-                algorithm = "default"
+                algorithm = "default",
                 #lower = c(-Inf, -Inf, -Inf, -Inf), algorithm = "port"
 )
 
@@ -324,12 +324,15 @@ ggplot() +
 
   
   labs(shape = "Experiment", color = "Method", location = "north") + 
-  theme(legend.position = c(.21, .95),
+  theme(legend.position = c(.28, .95),
         legend.justification = c("right", "top"),
         legend.box.just = "left",
+        legend.key = element_rect(colour = NA, fill = NA),
         legend.margin = margin(0, 6, 6, 6),
-        legend.title  = element_text(size=9),
-        legend.text   = element_text(size=7)) +
+        legend.title  = element_text(size=10),
+        legend.text   = element_text(size=10),
+        axis.text = element_text(size=11), 
+        axis.title = element_text(size=12)) +
 
   geom_text(data = stat_cors, show.legend = FALSE,
             aes(x = c(150,150,150,150,150,150,150,150)+55,
@@ -337,7 +340,7 @@ ggplot() +
                 # label = paste0(signif(r,2), " (" , signif(p,2), ")" ),
                 label = paste0(signif(r,3), signif ),
                 hjust = "left",
-                color = Method), size = 3) +
+                color = Method), size = 3.5) +
   # Display correlation coefficients
   annotate("point", x = c(150,150,150,150)+50,
                     y = seq(from=50, to=101, by=17)-29, shape = 17, alpha=0.7,
@@ -346,5 +349,5 @@ ggplot() +
                     y = seq(from=118, to=176, by=17)-29, shape = 16, alpha=0.7,
            color = c("#009E73", "#56B4E9", "#E69F00", "#111111"))
 
-ggsave(here("figures/fig_5.png"), width = 14, height = 12, units = "cm")
+ggsave(here("figures/fig_5_big.png"), width = 14, height = 12, units = "cm")
     
